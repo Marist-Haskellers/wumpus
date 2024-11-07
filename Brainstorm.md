@@ -13,6 +13,7 @@
     - how can tell rooms apart? (unique identifier?)
     - attribute/contents (empty/normal, pit, bats, wumpus)
     - should we store the "sense result" as data with each cave?
+    - which caves are neighbors?
 
 ## Functions and Classes
 
