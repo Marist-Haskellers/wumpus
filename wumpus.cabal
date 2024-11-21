@@ -60,6 +60,7 @@ test-suite wumpus-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Types
       Paths_wumpus
   autogen-modules:
       Paths_wumpus
