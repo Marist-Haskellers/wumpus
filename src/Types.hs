@@ -9,16 +9,9 @@ type Position = Int
 --    or move names which are incorrect (e.i. moving left when in that postion you can only move right)
 -- For a decahedron it Left Right Back make sense for every move as you will always have those options
 --    if orientated correctly
-data Move = Left | Right | Back
+data Move = MoveLeft | MoveRight | Back
 
-data GameState = GameState
-  {
-    playerPosition :: Position,
-    lastPostion :: Position,
-    playerArrowCount :: Int
-    wumpusPosition :: Position
-    hazards :: [(Position, Hazard)]
-  }
+
 
 data PlayerState = Player
   { playerPosition :: Position,
@@ -31,12 +24,15 @@ data PlayerState = Player
 data WumpusState = WumpusState
   { wumpusPosition :: Position
   }
+  deriving (Show)
 
 data EnvironmentState = EnvironmentState
-  { hazards :: [(Position, Hazard)]
+  { hazards :: [(Position, Hazard)],
+  currentPosition :: Position
   }
 
 data Hazard = Bats | Pit
+  deriving (Show)
 
 type CaveLayout = [(Position, [Position])]
 
@@ -67,15 +63,15 @@ decahedron =
 
 -- CaveLayout -> Current Position -> Last Position -> Move -> Position
 move :: CaveLayout -> Position -> Position -> Move -> Position
--- Example of how last postion is helpful:
--- let current position be 1
--- let last position be 2
--- let 1's mapLayout entry be (1, [2, 5, 8]),
--- Move Back -> obivously return 2
--- Move Left -> move left of 2 (cyclically if out of bounds) return 8
--- Move Right -> move right of 2 return 5
-move layout currPos lastPos dir = 
-  case dir of
-    Left -> undefined
-    Right -> undefined
-    Back -> lastPos
+move layout current last moveDirection =  -- Corrected function definition
+  let connections = lookup current layout
+      shiftedConnections = case connections of
+        Just cs -> let (before, after) = break (== last) cs
+                    in case after of
+                      [] -> cs  -- If last is not found, return original connections
+                      (x:_) -> x : before ++ after  -- Move last to head
+        Nothing -> []
+  in case moveDirection of
+    MoveLeft  -> shiftedConnections !! 1  -- Second item in the list
+    MoveRight -> shiftedConnections !! 2   -- Third item in the list
+    Back      -> last
