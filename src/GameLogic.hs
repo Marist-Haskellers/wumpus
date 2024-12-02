@@ -1,5 +1,5 @@
 import Types
-import Data.List(elemIndex)
+import Data.List(elemIndex, find)
 import Data.Maybe (fromMaybe)
 import System.Random.Shuffle
 import System.Random
@@ -79,11 +79,13 @@ createStartState startGameState = GameState
         (num, onceGen) = uniform (startRandomGen startGameState)
         (stateGen, nextGen) = split onceGen
         shuffledIndices = shuffle' indices num stateGen
-        (wumpusPos:restIndices) = shuffledIndices
+        -- make it so that the wumpus/ hazards cannot be at the start
+        -- Maybe it makes since that they also cannot be neighbors but that is not implemented
+        (wumpusPos:restIndices) = filter (/= 0) shuffledIndices
         hazardsList = replicate (numberOfBats startGameState) Bats 
             ++ replicate (numberOfBats startGameState) Pit
         envHazards = zip restIndices hazardsList
 
 -- main goal is to check for hazard / wumpus
 onEnterNewRoom :: GameState -> GameState
-onEnterNewRoom gameState = gameState case of
+onEnterNewRoom = undefined
