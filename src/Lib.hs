@@ -8,9 +8,12 @@ module Lib
 import Types
 import System.Random ( StdGen, randomR, randomRs )
 import Data.List ( nub )
+import Data.Char (toLower)
 
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
+
+data Move = MoveLeft | MoveRight | MoveBack deriving Show
 
 initializeWumpus :: StdGen -> (WumpusState, StdGen)
 initializeWumpus gen =
@@ -31,3 +34,14 @@ initializePlayer _ =
         pos = 1
         lastPos = 2 in
         PlayerState {playerPosition = pos, lastPosition = lastPos, playerArrowCount = arrows}
+
+-- [back, left, right]
+parseInput :: IO Move
+parseInput = do
+    putStrLn "Enter a Move (Left, Right, Back): "
+    input <- getLine
+    case map toLower input of
+        "left" -> return MoveLeft
+        "right" -> return MoveRight
+        "back" -> return MoveBack
+
