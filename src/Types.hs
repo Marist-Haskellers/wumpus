@@ -46,7 +46,7 @@ data EnvironmentState = EnvironmentState
 data Hazard = Bats | Pit deriving (Show, Eq)
 
 type CaveLayout = [(Position, [Position])]
-
+type MoveLayout = [((Position, Position), [Position])]
 
 data Sense = SmellWumpus | HearBats | FeelDraft deriving (Show, Eq)
 

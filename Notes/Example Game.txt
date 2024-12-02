@@ -1,0 +1,50 @@
+-- Determine random seed
+import System.Random (mkStdGen)
+let randomSeed = mkStdGen 42
+ 
+ 
+-- Define initial GameState
+:{
+let initialGameState = GameState
+      { playerState = Player { playerPosition = 1, lastPosition = 8, playerArrowCount = 3, playerHasShot = False },
+        wumpusState = WumpusState { wumpusPosition = 13 },
+        environmentState = EnvironmentState { hazards = [(6, Bats), (9, Pit)] },
+        gen = randomSeed,
+        gameStatus = Ongoing
+      }
+:}
+ 
+-- Test MoveLeft from position 1, coming from 2
+let newPosition1 = move testCaveLayout 1 2 MoveLeft
+print newPosition1 -- Expected: 8
+
+-- Test MoveRight from position 1, coming from 2
+let newPosition2 = move testCaveLayout 1 2 MoveRight
+print newPosition2 -- Expected: 5
+
+-- Test MoveBack from position 1, coming from 2
+let newPosition3 = move testCaveLayout 1 2 MoveBack
+print newPosition3 -- Expected: 2
+
+-- Test MoveLeft from position 2, coming from 3
+let newPosition4 = move testCaveLayout 2 3 MoveLeft
+print newPosition4 -- Expected: 10
+
+-- Test MoveRight from position 2, coming from 3
+let newPosition5 = move testCaveLayout 2 3 MoveRight
+print newPosition5 -- Expected: 1
+
+-- Test MoveBack from position 2, coming from 3
+let newPosition6 = move testCaveLayout 2 3 MoveBack
+print newPosition6 -- Expected: 3
+
+-- Test MoveRight from position 19, coming from 18
+let newPosition7 = move testCaveLayout 19 18 MoveRight
+print newPosition7 -- Expected: 11
+
+-- Test MoveLeft from position 19, coming from 18
+let newPosition8 = move testCaveLayout 19 18 MoveLeft
+print newPosition8 -- Expected: 20
+
+
+ 
