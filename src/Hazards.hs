@@ -3,7 +3,6 @@ import Types (Hazard(..))
 import Types (Sense(..))
 import Types (Position(..))
 import Types (CaveLayout(..))
-
 toSense :: Hazard -> Sense
 toSense Bats = Hear
 toSense Pit  = Feel

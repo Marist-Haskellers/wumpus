@@ -24,7 +24,6 @@ move layout startPos prevPos moveTo = neighbors !! ( (moveTransform + matchingIn
             Types.Back -> 0
             Types.Right -> 1
 
-type MoveInMap = Position -> Position -> Move -> Position
 -- Map Layout:
 decahedron :: CaveLayout
 decahedron = [[1, 4, 7],   -- 0
@@ -73,7 +72,8 @@ createStartState startGameState = GameState
         },
       wumpusState = WumpusState { wumpusPosition = wumpusPos },
       environmentState = EnvironmentState { hazards = envHazards },
-      randomGen = nextGen
+      randomGen = nextGen,
+      mover = move (caveLayout startGameState)
     }
     where 
         indices = [0..(length (caveLayout startGameState))]

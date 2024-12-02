@@ -1,9 +1,9 @@
 module Main (main) where
 
-import Lib
+import Lib (startGame)
 
 main :: IO ()
-main = someFunc
+main = startGame
 
 -- put the player at starting position 
 -- randomly assign the pit, bats, and wumpus positions

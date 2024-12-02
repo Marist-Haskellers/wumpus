@@ -11,6 +11,7 @@ type Position = Int
 -- For a decahedron it Left Right Back make sense for every move as you will always have those options
 --    if orientated correctly
 data Move = Left | Right | Back deriving(Show)
+type MoveInMap = Position -> Position -> Move -> Position
 
 data Sense = Hear | Feel | Smell deriving(Show)
 
@@ -36,6 +37,7 @@ data GameState = GameState
     { playerState :: PlayerState,
       wumpusState :: WumpusState,
       environmentState :: EnvironmentState,
+      mover :: MoveInMap,
       randomGen :: StdGen
     }
 
