@@ -1,4 +1,16 @@
+<<<<<<< HEAD
 module Types where
+=======
+module Types (
+  PlayerState(..),
+  EnvironmentState,
+  Hazard(..),
+  CaveLayout,
+  Position,
+  wumpusPosition,
+  WumpusState(..)
+) where
+>>>>>>> 268ffa67c9937e4ed115a1f90be7d9c44e211b73
 
 type Position = Int
 
@@ -9,7 +21,6 @@ type Position = Int
 --    or move names which are incorrect (e.i. moving left when in that postion you can only move right)
 -- For a decahedron it Left Right Back make sense for every move as you will always have those options
 --    if orientated correctly
-data Move = Left | Right | Back
 
 data GameState = GameState {
     wumpus :: WumpusState,
@@ -60,13 +71,4 @@ decahedron =
     (20, [13, 16, 19])
   ]
 
--- CaveLayout -> Current Position -> Last Position -> Move -> Position
-move :: CaveLayout -> Position -> Position -> Move -> Position
--- Example of how last postion is helpful:
--- let current position be 1
--- let last position be 2
--- let 1's mapLayout entry be (1, [2, 5, 8]),
--- Move Back -> obivously return 2
--- Move Left -> move left of 2 (cyclically if out of bounds) return 8
--- Move Right -> move right of 2 return 5
-move = undefined
+

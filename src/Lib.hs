@@ -3,10 +3,16 @@ module Lib where
 import Types
 import System.Random
 import Data.List ( nub )
+<<<<<<< HEAD
 import Control.Monad.Cont (when)
+=======
+import Data.Char (toLower)
+>>>>>>> 268ffa67c9937e4ed115a1f90be7d9c44e211b73
 
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
+
+data Move = MoveLeft | MoveRight | MoveBack deriving Show
 
 initializeWumpus :: StdGen -> (WumpusState, StdGen)
 initializeWumpus gen =
@@ -27,6 +33,7 @@ initializePlayer _ =
         lastPos = 2 in
         PlayerState {playerPosition = pos, lastPosition = lastPos, playerArrowCount = arrows}
 
+<<<<<<< HEAD
 initializeGameState :: Int -> IO GameState
 initializeGameState seed = do
     let gen = mkStdGen seed
@@ -116,3 +123,15 @@ gameLoop gs = do
             
             -- process move and continue
             gameLoop $ processMove gs move
+=======
+-- [back, left, right]
+parseInput :: IO Move
+parseInput = do
+    putStrLn "Enter a Move (Left, Right, Back): "
+    input <- getLine
+    case map toLower input of
+        "left" -> return MoveLeft
+        "right" -> return MoveRight
+        "back" -> return MoveBack
+
+>>>>>>> 268ffa67c9937e4ed115a1f90be7d9c44e211b73
