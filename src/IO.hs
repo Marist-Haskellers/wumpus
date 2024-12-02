@@ -1,3 +1,4 @@
+module IO where
 import Types (Move(..))
 import Types (Sense(..))
 import Types (Choice(..))

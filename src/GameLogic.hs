@@ -1,3 +1,4 @@
+module GameLogic where
 import Types
 import Data.List(elemIndex, find)
 import Data.Maybe (fromMaybe)

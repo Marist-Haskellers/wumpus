@@ -1,3 +1,4 @@
+module Hazards where
 toSense :: Hazard -> Sense
 toSense Bats = Hear
 toSense Pit  = Feel
