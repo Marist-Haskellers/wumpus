@@ -1,13 +1,4 @@
-module Types (
-  PlayerState(..),
-  EnvironmentState,
-  Move,
-  Hazard(..),
-  CaveLayout,
-  Position,
-  wumpusPosition,
-  WumpusState(..)
-) where
+module Types where
 
 type Position = Int
 
@@ -19,6 +10,12 @@ type Position = Int
 -- For a decahedron it Left Right Back make sense for every move as you will always have those options
 --    if orientated correctly
 data Move = Left | Right | Back
+
+data GameState = GameState {
+    wumpus :: WumpusState,
+    environment :: EnvironmentState,
+    player :: PlayerState
+}
 
 data PlayerState = PlayerState {
   playerPosition :: Position,
@@ -33,8 +30,6 @@ data WumpusState = WumpusState {
 data EnvironmentState = EnvironmentState
   { hazards :: [(Position, Hazard)]
   }
-  
-
 
 data Hazard = Bats | Pit deriving Show
 
