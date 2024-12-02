@@ -75,11 +75,11 @@ senseToGame sense = case sense of
 -- Have the player choose if they want to move, sense, or shoot when they first enter the room
 getChoiceFromUser :: IO Choice
 getChoiceFromUser = do
-    output "Enter what sense you use (1 for Move, 2 for Sense, 3 for Shoot): "
+    output "Enter what choice you want (1 for Move, 2 for Sense, 3 for Shoot): "
     choice <- getLine  -- Read user input
     case choiceToGame choice of
         Just validChoice -> do
-            output $ "You selected: " ++ show validChoice
+            --output $ "You selected: " ++ show validChoice
             return validChoice
         Nothing -> do
             output "Invalid Option: Please try again."
