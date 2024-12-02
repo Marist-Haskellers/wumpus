@@ -1,8 +1,9 @@
 module Main (main) where
 
 import Lib (startGame)
+import Types (GameState)
 
-main :: IO ()
+main :: IO GameState
 main = startGame
 
 -- put the player at starting position 

@@ -2,7 +2,7 @@ module Lib
     ( startGame
     ) where
 import Types (GameState(..), Choice(..), PlayerState(..))
-import IO (getChoiceFromUser, getMoveFromUser)
+import IO (getChoiceFromUser, getMoveFromUser, output)
 import GameLogic (StartGameState (..), createStartState, decahedron)
 import System.Random
 
@@ -21,11 +21,12 @@ startGame = do
 
 oneLoop :: GameState -> IO GameState
 oneLoop gameState = do
+    let curPos = currentPosition (playerState gameState)
+    output ("You are currently in room " ++ show curPos)
     choice <- getChoiceFromUser
     case choice of
         ChoiceMove -> do
             move <- getMoveFromUser
-            let curPos = currentPosition (playerState gameState)
             let oldPos = lastPosition (playerState gameState)
             let newPos = mover gameState curPos oldPos move
             oneLoop GameState {
