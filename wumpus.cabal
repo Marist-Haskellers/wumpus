@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Functions
       Lib
       Types
   other-modules:
@@ -38,6 +39,7 @@ library
       base >=4.8 && <5
     , mtl ==2.2.*
     , random >=1.2.1
+    , random-shuffle >=0.0.4
   default-language: Haskell2010
 
 executable wumpus-exe
@@ -51,8 +53,9 @@ executable wumpus-exe
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.8 && <5
-    , mtl ==2.2.*
+    , mtl
     , random >=1.2.1
+    , random-shuffle >=0.0.4
     , wumpus
   default-language: Haskell2010
 
@@ -60,6 +63,7 @@ test-suite wumpus-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Types
       Paths_wumpus
   autogen-modules:
       Paths_wumpus
@@ -68,7 +72,8 @@ test-suite wumpus-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.8 && <5
-    , mtl ==2.2.*
+    , mtl
     , random >=1.2.1
+    , random-shuffle >=0.0.4
     , wumpus
   default-language: Haskell2010

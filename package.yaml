@@ -49,6 +49,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - wumpus
+    - mtl
 
 tests:
   wumpus-test:
@@ -60,3 +61,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - wumpus
+    - mtl
