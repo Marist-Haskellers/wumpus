@@ -6,9 +6,7 @@ module Lib
     move,
     setState,
     handleMovement,
-    handleShooting,
-    testCaveLayout,
-    testCaveMap
+    handleShooting
   ) where
 
 import qualified System.Random as Random
@@ -19,108 +17,7 @@ import Types
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
 
--- Old Dodecahedron map to test with
-testCaveLayout :: CaveLayout
-testCaveLayout =
-  [ (1,  [2, 5, 8]),
-    (2,  [1, 3, 10]),
-    (3,  [2, 4, 12]),
-    (4,  [3, 5, 14]),
-    (5,  [1, 4, 6]),
-    (6,  [5, 7, 15]),
-    (7,  [6, 8, 17]),
-    (8,  [1, 7, 9]),
-    (9,  [8, 10, 18]),
-    (10, [2, 9, 11]),
-    (11, [10, 12, 19]),
-    (12, [3, 11, 13]),
-    (13, [12, 14, 20]),
-    (14, [4, 13, 15]),
-    (15, [6, 14, 16]),
-    (16, [15, 17, 20]),
-    (17, [7, 16, 18]),
-    (18, [9, 17, 19]),
-    (19, [11, 18, 20]),
-    (20, [13, 16, 19])
-  ]
-
-testCaveMap :: MoveLayout
-testCaveMap =
-  [ ((1,2), [8,5]),
-    ((1,5), [2,8]),
-    ((1,8), [5,2]),
-    ((2,1), [3,10]),
-    ((2,3), [10,1]),
-    ((2,10), [1,3]),
-    ((3,2), [4,12]),
-    ((3,4), [12,2]),
-    ((3,12), [2,4]),
-    ((4,3), [5,14]),
-    ((4,5), [14,3]),
-    ((4,14), [3,5]),
-    ((5,1), [6,4]),
-    ((5,4), [1,6]),
-    ((5,6), [4,1]),
-    ((6,5), [7,15]),
-    ((6,7), [15,5]),
-    ((6,15), [5,7]),
-    ((7,6), [8,17]),
-    ((7,8), [17,6]),
-    ((7,17), [6,8]),
-    ((8,1), [9,7]),
-    ((8,7), [1,9]),
-    ((8,9), [7,1]),
-    ((9,8), [10,18]),
-    ((9,10), [18,8]),
-    ((9,18), [8,10]),
-    ((10,2), [11,9]),
-    ((10,9), [2,11]),
-    ((10,11), [9,2]),
-    ((11,10), [12,19]),
-    ((11,12), [19,10]),
-    ((11,19), [10,12]),
-    ((12,3), [13,11]),
-    ((12,11), [3,13]),
-    ((12,13), [11,3]),
-    ((13,12), [14,20]),
-    ((13,14), [20,12]),
-    ((13,20), [12,14]),
-    ((14,4), [15,13]),
-    ((14,13), [4,15]),
-    ((14,15), [13,4]),
-    ((15,6), [16,14]),
-    ((15,14), [6,16]),
-    ((15,16), [14,6]),
-    ((16,15), [17,20]),
-    ((16,17), [20,15]),
-    ((16,20), [15,17]),
-    ((17,7), [18,16]),
-    ((17,16), [7,18]),
-    ((17,18), [16,7]),
-    ((18,9), [19,17]),
-    ((18,17), [9,19]),
-    ((18,19), [17,9]),
-    ((19,11), [20,18]),
-    ((19,18), [11,20]),
-    ((19,20), [18,11]),
-    ((20,13), [16,19]),
-    ((20,16), [19,13]),
-    ((20,19), [13,16])
-  ]
-
--- Moves the player, in main this would be called before setState
--- CaveLayout, currentPosition, previousPosition, noveDirection, new position
-{-move :: MoveLayout -> Position -> Position -> Move -> Position
-move layout currentPosition previousPosition moveType =
-  case lookup [currentPosition, previousPosition] layout of
-    Just [left, right] ->
-      case moveType of
-        MoveBack  -> previousPosition -- Moving back to the previous position
-        MoveLeft  -> left             -- Moving to the left cave
-        MoveRight -> right            -- Moving to the right cave
-    Nothing -> error $ "No valid move found for currentPosition: " ++ show currentPosition
-                    ++ ", previousPosition: " ++ show previousPosition -}
-
+-- Move function that is called during setState and handleMovement
 move :: MoveLayout -> Position -> Position -> Move -> Position
 move layout currentPosition previousPosition moveType =
   case lookup (currentPosition, previousPosition) layout of
@@ -129,8 +26,10 @@ move layout currentPosition previousPosition moveType =
         MoveBack  -> previousPosition -- Move back to the previous position
         MoveLeft  -> left             -- Move to the left cave
         MoveRight -> right            -- Move to the right cave
+    Just _ -> error $ "Invalid layout entry for currentPosition: " ++ show currentPosition
+      ++ ", previousPosition: " ++ show previousPosition
     Nothing -> error $ "No valid move found for currentPosition: " ++ show currentPosition
-                    ++ ", previousPosition: " ++ show previousPosition
+      ++ ", previousPosition: " ++ show previousPosition
 
 
 -- Function that modifies the state of the game depending on the players actions
@@ -143,6 +42,9 @@ setState player action gameState =
     ShootAction path ->
       -- Shooting logic
       handleShooting player path gameState
+    SenseAction sense ->
+      --displaySenses (playerPosition player) NOTE: Need to work on returning sense directly
+      undefined sense
 
 -- Function to handle movement of player
 -- Take in current player state, action they performed, curent game state, and gives new game state
@@ -162,7 +64,7 @@ handleMovement player moveDir gameState =
     wumpusPos = wumpusPosition wumpus
 
     -- Determine new position based on moveDir
-    newPos = move testCaveMap currentPos lastPos moveDir
+    newPos = move caveMap currentPos lastPos moveDir
 
     -- Update PlayerState
     updatedPlayer = player {
@@ -181,10 +83,10 @@ handleMovement player moveDir gameState =
     (interimPlayer, interimGen, interimStatus) = case hazard of
       Just Bats ->
         -- Transport player to a random position
-        let (randPos, newStdGen) = getRandomPosition genVal testCaveLayout
+        let (randPos, randLastPos, newStdGen) = getRandomPosition genVal decahedron
             transportedPlayer = updatedPlayer {
               playerPosition = randPos,
-              lastPosition = newPos
+              lastPosition = randLastPos
             }
         in (transportedPlayer, newStdGen, Ongoing)
       Just Pit ->
@@ -204,7 +106,7 @@ handleMovement player moveDir gameState =
              (interimPlayer, wumpus, newStdGen, GameOver "You were eaten by the Wumpus!")
            else
              -- Wumpus flees to a random adjacent cave
-             let connections = fromMaybe [] (lookup wumpusPos testCaveLayout)
+             let connections = fromMaybe [] (lookup wumpusPos decahedron)
                  (idx, updatedGen') = Random.randomR (0, length connections - 1) newStdGen :: (Int, Random.StdGen)
                  newWumpusPos = connections !! idx
                  newWumpus = wumpus { wumpusPosition = newWumpusPos }
@@ -277,7 +179,7 @@ handleShooting player path gameState =
 validateArrowPath :: Position -> [Position] -> Bool
 validateArrowPath _ [] = True  -- Empty path is valid
 validateArrowPath currentPos (nextPos:rest) =
-  case lookup currentPos testCaveLayout of
+  case lookup currentPos decahedron of
     Just connections ->
       (nextPos `elem` connections) && validateArrowPath nextPos rest
     Nothing -> False  -- Current position not found in the cave layout
@@ -292,20 +194,24 @@ selectRandomElement genValue list =
   in
     (element, newStdGen)
 
--- Used for bats transporting player to a random cave
-getRandomPosition :: Random.StdGen -> CaveLayout -> (Position, Random.StdGen)
+-- Used for bats transporting player to a random cave, returns random position and a random last position connected to this position
+getRandomPosition :: Random.StdGen -> CaveLayout -> (Position, Position, Random.StdGen)
 getRandomPosition genValue cave =
   let
     allPositions = map fst cave
-    (newPos, newStdGen) = selectRandomElement genValue allPositions
+    (newPos, gen1) = selectRandomElement genValue allPositions  -- Random position
+    connections = case lookup newPos cave of
+      Just conns -> conns
+      Nothing -> error $ "Invalid position in cave layout: " ++ show newPos
+    (lastPos, gen2) = selectRandomElement gen1 connections      -- Random last position from connections
   in
-    (newPos, newStdGen)
+    (newPos, lastPos, gen2)
 
 moveWumpusRandomly :: WumpusState -> Random.StdGen -> (WumpusState, Random.StdGen)
 moveWumpusRandomly currentWumpusState genValue =
   let
     wumpusPos = wumpusPosition currentWumpusState
-    connections = fromMaybe [] (lookup wumpusPos testCaveLayout)
+    connections = fromMaybe [] (lookup wumpusPos decahedron)
     (newWumpusPos, newGen) = selectRandomElement genValue connections
     updatedWumpus = currentWumpusState { wumpusPosition = newWumpusPos }
   in

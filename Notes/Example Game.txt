@@ -13,38 +13,12 @@ let initialGameState = GameState
         gameStatus = Ongoing
       }
 :}
- 
--- Test MoveLeft from position 1, coming from 2
-let newPosition1 = move testCaveLayout 1 2 MoveLeft
-print newPosition1 -- Expected: 8
 
--- Test MoveRight from position 1, coming from 2
-let newPosition2 = move testCaveLayout 1 2 MoveRight
-print newPosition2 -- Expected: 5
+-- Move to cave 5
+let gs1 = setState (playerState initialGameState) (MoveAction MoveLeft) initialGameState
+print gs1
 
--- Test MoveBack from position 1, coming from 2
-let newPosition3 = move testCaveLayout 1 2 MoveBack
-print newPosition3 -- Expected: 2
-
--- Test MoveLeft from position 2, coming from 3
-let newPosition4 = move testCaveLayout 2 3 MoveLeft
-print newPosition4 -- Expected: 10
-
--- Test MoveRight from position 2, coming from 3
-let newPosition5 = move testCaveLayout 2 3 MoveRight
-print newPosition5 -- Expected: 1
-
--- Test MoveBack from position 2, coming from 3
-let newPosition6 = move testCaveLayout 2 3 MoveBack
-print newPosition6 -- Expected: 3
-
--- Test MoveRight from position 19, coming from 18
-let newPosition7 = move testCaveLayout 19 18 MoveRight
-print newPosition7 -- Expected: 11
-
--- Test MoveLeft from position 19, coming from 18
-let newPosition8 = move testCaveLayout 19 18 MoveLeft
-print newPosition8 -- Expected: 20
-
-
+-- Move to cave 6 (bats, random position)
+let gs2 = setState (playerState gs1) (MoveAction MoveLeft) gs1
+print gs2
  
