@@ -80,7 +80,7 @@ handleMovement player moveDir gameState =
                   { playerPosition = randPos,
                     lastPosition = randLastPos
                   }
-           in (transportedPlayer, newStdGen, Ongoing "The bats grab you by the arms and fly you to an unknown cave.")
+           in (transportedPlayer, newStdGen, Ongoing ("Your in cave # " ++ show newPos ++ ". \nThe bats grab you by the arms and fly you to an unknown cave."))
         Just Pit ->
           -- Player falls into a pit, game over
           (updatedPlayer, genVal, GameOver "You fell into a pit!")
@@ -187,9 +187,9 @@ handleSensing player sense gameState =
         Just senseList ->
           let filteredList = filter (== sense) senseList
            in if null filteredList
-                then "There are no hazards nearby able to be sensed with this sense."
+                then "There are no hazards nearby able to be sensed with this sense.\n"
                 else unlines $ map describeSense filteredList
-        Nothing -> "You sense nothing unusual."
+        Nothing -> "You sense nothing unusual.\n"
    in gameState {gameStatus = Ongoing message}
 
 validateArrowPath :: Position -> [Position] -> Bool

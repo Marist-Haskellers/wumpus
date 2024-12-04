@@ -92,9 +92,9 @@ displaySenses current senses =
     Nothing -> return ()
 
 describeSense :: Sense -> String
-describeSense SmellWumpus = "You smell something foul nearby."
-describeSense HearBats = "You hear the flapping of wings."
-describeSense FeelDraft = "You feel a draft nearby."
+describeSense SmellWumpus = "\nYou smell something foul nearby."
+describeSense HearBats = "\nYou hear the flapping of wings."
+describeSense FeelDraft = "\nYou feel a draft nearby."
 
 -- Static map for the cave
 decahedron :: CaveLayout

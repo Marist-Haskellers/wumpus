@@ -22,11 +22,14 @@ main = do
 
 gameLoopIO :: GameState -> IO ()
 gameLoopIO state = do
-  putStrLn $ "You're inside cave #" ++ showState state -- Display current cave
+  let caveData = "\nYou're inside cave #" ++ showState state -- Display current cave
   case gameStatus state of
-    GameOver reason -> putStrLn $ "Game over! Reason: " ++ reason
+    GameOver reason -> do
+      putStrLn caveData
+      putStrLn $ "Game over! Reason: " ++ reason
     Ongoing message -> do
       unless (null message) (putStrLn message) -- Print the ongoing status message if present
+      putStrLn caveData
       putStrLn "Perform an action:"
       input <- getLine
       -- Handle "rules" input
