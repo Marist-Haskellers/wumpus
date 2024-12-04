@@ -1,27 +1,29 @@
-module Lib
-    ( startGame
-    ) where
+module Lib where
+    -- ( startGame
+    -- ) where
 import Types (GameState(..), Choice(..), PlayerState(..))
 import IO (getChoiceFromUser, getMoveFromUser, output, getSenseFromUser)
 import GameLogic (StartGameState (..), createStartState, decahedron)
 import System.Random
 import Hazards
 
-startGame :: IO GameState
-startGame = do 
-    let startState = createStartState StartGameState {
+startState :: StartGameState
+startState = StartGameState {
         startRandomGen=mkStdGen 42,
-        playerLastPostion=2,
+        playerLastPostion=0,
         playerCurrentPosition=1,
         playerArrowCount=5,
         numberOfPits=2,
         numberOfBats=2,
         caveLayout=decahedron
     }
-    oneLoop startState
+startGame :: IO GameState
+startGame = do 
+    oneLoop (createStartState startState)
 
 oneLoop :: GameState -> IO GameState
 oneLoop gameState = do
+    -- output (map . show (hazards (environmentState gameState)))
     let curPos = currentPosition (playerState gameState)
     output ("You are currently in room " ++ show curPos)
     choice <- getChoiceFromUser

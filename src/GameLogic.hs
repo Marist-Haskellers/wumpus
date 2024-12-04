@@ -76,10 +76,9 @@ createStartState startGameState = GameState
       mover = move (caveLayout startGameState)
     }
     where 
-        indices = [0..(length (caveLayout startGameState))]
-        (num, onceGen) = uniform (startRandomGen startGameState)
-        (stateGen, nextGen) = split onceGen
-        shuffledIndices = shuffle' indices num stateGen
+        indices = [0..(length (caveLayout startGameState)-1)]
+        (stateGen, nextGen) = split (startRandomGen startGameState) 
+        shuffledIndices = shuffle' indices (length (caveLayout startGameState)) stateGen
         -- make it so that the wumpus/ hazards cannot be at the start
         -- Maybe it makes since that they also cannot be neighbors but that is not implemented
         (wumpusPos:restIndices) = filter (/= 0) shuffledIndices
