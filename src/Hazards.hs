@@ -19,9 +19,12 @@ senseHazards gameState = do
     senses ++ map (toSense . snd) (filter (\(pos, _) -> pos `elem` neighbors) hzrds) 
 
 
-handleHazards :: Position -> [(Position, Hazard)] -> Maybe String
-handleHazards position hazards =
-    case lookup position hazards of
-        Just Bats -> Just "A swarm of super-bats swoops in and lifts you away."
-        Just Pit  -> Just "You fell into a bottomless pit and died."
-        Nothing   -> Nothing
+
+handleHazards :: GameState -> Maybe String
+handleHazards gaState =
+    let currentPos = currentPosition (playerState gameState)
+        hzrds = hazards (environmentState gameState)
+        wumpusPos = wumpusPosition(wumpusState gameState)
+currentPos == wumpusPos -> Just "The Wumpus caught and devoured you"
+Just Bats <- lookup currentPos hzrds -> 
+Just Pit <- lookup currentPos hzrds -> Just ""
