@@ -1,115 +1,154 @@
 module Main where
 
+import Control.Monad (when)
 import Data.Char (toLower)
-import Data.List (break)
+import Data.Maybe (fromJust, fromMaybe, isJust)
 import Lib
+import System.Random (StdGen, newStdGen)
 import Types
--- import GameLogic (Action, GameState, gameLoop, initialState, isGameOver) TODO: Example parameters for gameLogic function
 
 main :: IO ()
 main = do
-  putStrLn "Welcome Hunt the Wumpus!"
+  putStrLn "Welcome to Hunt the Wumpus!"
   rules
   putStrLn "To see the rules at any time just type 'rules'."
-  gameLoopIO initialState -- Begin game loop with init state
+  putStrLn ""
+  gen <- newStdGen
+  let initialGameState = initialState gen -- Initialize game state
+  gameLoopIO initialGameState -- Begin game loop
 
 gameLoopIO :: GameState -> IO ()
 gameLoopIO state = do
-  putStrLn $ "You're inside cave #" ++ showState state -- Display the cave #n the player is in
-  putStrLn "Perform an action:"
-  input <- getLine
-  case parseInput input of -- cases for what to do when the input is valid or not
-    Just action -> do
-      output <- parseActionOutput action
-      putStrLn output
-      -- in the case the action is valid
-      let (newState, event) = applyAction state action -- create the new game state with the curr state and action
-      eventOut <- parseGameOutput event
-      putStrLn eventOut
-      if isGameOver newState -- if this resulting game state exists and results in a death
-        then putStrLn "Game over!"
-        else gameLoopIO newState -- else, continue game loop
-    Nothing -> do
-      if input == "rules"
+  putStrLn $ "You're inside cave #" ++ showState state -- Display current cave
+  case gameStatus state of
+    GameOver reason -> putStrLn $ "Game over! Reason: " ++ reason
+    Ongoing -> do
+      putStrLn "Perform an action:"
+      input <- getLine
+      -- Handle "rules" input
+      if map toLower input == "rules"
         then do
           rules
-          gameLoopIO state -- continue the game loop after displaying the rules
-        else do
-          putStrLn "Invalid action"
-          gameLoopIO state -- continue the game loop re-asking "Enter move"
+          gameLoopIO state -- Continue the game loop after displaying the rules
+        else case parseInput state input of
+          -- Handle valid input
+          Just action -> do
+            newState <- setState (playerState state) action state
+            -- Handle senses if the action is a SenseAction
+            putStrLn ""
+            gameLoopIO newState
+          -- Handle invalid input
+          Nothing -> do
+            putStrLn ""
+            putStrLn "Invalid action"
+            putStrLn ""
+            gameLoopIO state -- Re-ask for input
 
-parseInput :: String -> Maybe Action
-parseInput input =
+-- Helper function to check if an action is a sense
+isSenseAction :: Action -> Bool
+isSenseAction (SenseAction _) = True
+isSenseAction _ = False
+
+parseInput :: GameState -> String -> Maybe Action
+parseInput state input =
   -- break the input into lowercase words to be further distinguished
-  case words $ map toLower input of
-    "move" : dir : _ -> case dir of
-      "left" -> Just Move left
-      "right" -> Just Move right
-      "back" -> Just Move back
+  case words (map toLower input) of
+    ("move" : dir : _) -> case dir of
+      "left" -> Just $ MoveAction MoveLeft
+      "right" -> Just $ MoveAction MoveRight
+      "back" -> Just $ MoveAction MoveBack
       _ -> Nothing
-    "shoot" : directions -> Just $ ShootPath directions
-    "smell" -> Just Smell
-    "feel" -> Just Feel
-    "listen" -> Just Listen
+    ("shoot" : path) ->
+      let currentPos = playerPosition $ playerState state
+          parsedPath = translatePath currentPos path decahedron
+       in if all isJust parsedPath -- if all paths are just the parse path, and not nothing
+            then Just $ ShootAction (map fromJust parsedPath) -- then shoot with path whose just part is removed from the parsed paths
+            else Nothing
+    ("sense" : sense : _) -> case sense of
+      "smell" -> Just $ SenseAction SmellWumpus
+      "listen" -> Just $ SenseAction HearBats
+      "feel" -> Just $ SenseAction FeelDraft
+      _ -> Nothing
     _ -> Nothing
 
-parseActionOutput :: Action -> IO String
-parseActionOutput action =
-  return $ case action of
-    Move left -> "You move into the cave to your left."
-    Move right -> "You move into the cave to your right."
-    Move back -> "You move back into the prior cave."
-    ShootPath directions -> "You shoot an arrow following the path: " ++ unwords directions
-    Smell -> "You sniff the air for the sour smell of the Wumpus."
-    Feel -> "You touch the floor and walls of the cave, you feel for any breeze."
-    Listen -> "You hold your breath and listen for any sounds in the cave."
+-- Helper function to parse the arrows path into a route through the caves
+translatePath :: Position -> [String] -> CaveLayout -> [Maybe Position]
+translatePath _ [] _ = [] -- base case
+translatePath currentPos (dir : dirs) layout =
+  -- using the current position and layout
+  case lookup currentPos layout of
+    -- if there is a path instruction
+    Just connections ->
+      -- next position corresponds to where the arrow will end up
+      let nextPos = case dir of
+            "left" -> Just (connections !! 0) -- Left cave
+            "right" -> Just (connections !! 1) -- Right cave
+            "back" -> Just (connections !! 2) -- Previous cave
+            _ -> Nothing
+       in nextPos : translatePath (fromMaybe currentPos nextPos) dirs layout
+    -- translate this position into a direction for handleShooting in Lib.hs
+    Nothing -> [Nothing]
 
-parseGameOutput :: GameEvent -> IO String
-parseGameOutput event =
-  return $ case event of
-    WumpusDied -> "You hear a shriek and large thud as the Wumpus falls to the floor, defeated."
-    FellIntoPit -> "You slip and fall into the bottomless pit, falling for your remaining days."
-    MovedByBats -> "You're carried to another cave by a swarm of cave bats."
-    ArrowMissed -> "Your arrow clatters to the ground, no other noises are made in the dark."
-    ArrowStartled -> "Your arrow clatters to the ground, the Wumpus is heard scurrying away."
-    PlayerKilled -> "The Wumpus chases you down and with its giant mouth, devours you whole."
+-- Show room #
+showState :: GameState -> String
+showState state = show (playerPosition $ playerState state)
+
+-- Initial game state
+initialState :: StdGen -> GameState
+initialState gen =
+  let -- Generate random positions for hazards using `getRandomPosition` from Lib.hs
+      (bats1, _, gen1) = getRandomPosition gen decahedron
+      (bats2, _, gen2) = getRandomPosition gen1 decahedron
+      (pits1, _, gen3) = getRandomPosition gen2 decahedron
+      (pits2, _, gen4) = getRandomPosition gen3 decahedron
+      hazards = [(bats1, Bats), (bats2, Bats), (pits1, Pit), (pits2, Pit)]
+
+      -- Generate Wumpus position
+      (wumpusPos, gen5) = selectRandomElement gen4 (map fst decahedron)
+
+      -- Ensure the player starts in a safe position
+      (playerPos, lastPos, gen6) = findSafePlayerPosition gen5 hazards decahedron
+
+      -- Create initial states
+      player = Player {playerPosition = playerPos, lastPosition = lastPos, playerArrowCount = 3, playerHasShot = False}
+      wumpus = WumpusState {wumpusPosition = wumpusPos}
+      environment = EnvironmentState {hazards = hazards}
+   in GameState {playerState = player, wumpusState = wumpus, environmentState = environment, gen = gen6, gameStatus = Ongoing}
 
 rules :: IO ()
 rules = do
+  putStrLn ""
   putStrLn "-- Rules --"
   putStrLn ""
-  putStrLn "1. The goal of the game is to hunt and kill the dreaded Wumpus by:"
-  putStrLn "      Shooting the Wumpus with an arrow has a 50/50 chance to kill it or scare it"
-  putStrLn "      If the Wumpus flees it runs to a neighboring room and goes back to sleep"
-  putStrLn "      Using 'Sense Smell' allows the player to sense if the Wumpus is in a room neighboring the current cave"
+  putStrLn "Welcome to Hunt the Wumpus! Your mission is to locate and kill the deadly Wumpus hiding in the caves."
+  putStrLn "Kill the Wumpus by shooting it with an arrow. Be careful, the Wumpus may kill you or flee if you startle it!"
   putStrLn ""
   putStrLn "2. How to play:"
-  putStrLn "      Using your wits and ingenuity, you must hunt and kill the deadly Wumpus."
-  putStrLn "      In each cave, activate your senses 'Sense <sense>' and gather data on your environment."
-  putStrLn "      Fire magical Crooked Arrows using 'Shoot <distance>' through (max. 5) caves in an attempt to kill the Wumpus, or scare it."
-  putStrLn "      Move to an adjacent cave 'Move <direction>' using Left/Right/Back in respect to how the player enters the current cave."
+  putStrLn "   - Move <direction>: Move to a connected cave. Choose either 'move left', 'move right', or 'move back'."
+  putStrLn "   - Sense <sense>: Use your senses to gather information on your surroundings."
+  putStrLn "       'sense smell' - Detect if the Wumpus is nearby."
+  putStrLn "       'sense hear' - Listen for the flapping wings of bats."
+  putStrLn "       'sense feel' - Feel for drafts near a bottomless pit."
+  putStrLn "   - Shoot <path>: Fire an arrow on a path of up to 5 caves. The arrow may hit or scare the Wumpus."
+  putStrLn "       'shoot left, right, back...' - Detect if the Wumpus is nearby."
   putStrLn ""
-  putStrLn "3. In each cave the player can either:"
-  putStrLn "      Move <direction> - to another cave (Left, Right, Back)"
-  putStrLn "      Sense <sense> - smell, hear, feel"
-  putStrLn "      Shoot <distance> - path arrow takes (Left/Right/Left/Right)"
+  putStrLn "3. Hazards in the Caves:"
+  putStrLn "   - The Wumpus: If you enter its cave, there's a 50/50 chance it will either kill you or flee to a neighboring cave."
+  putStrLn "   - Bottomless Pits: Falling into one results in an instant game over!"
+  putStrLn "   - Cave Bats: These creatures will transport you to a random cave, possibly putting you in harm's way."
   putStrLn ""
-  putStrLn "4. In-game Situations: The player..."
-  putStrLn "      enters into the room with the Wumpus, 50/50 chance for Wumpus to flee or kill you"
-  putStrLn "      enters a room with Cave Bats, they're transported to a random cave"
-  putStrLn "      enters a room with a bottomless pit, they fall in and die"
-  putStrLn "      uses a sense and it records information from neighboring caves"
-  putStrLn "      fires an arrow some distance through the caves, if the Wumpus is in the destination cave, 50/50 chance to startle it or kill it"
-
-{-
-TODO:
-  - showState: returns data of curr game state
-  - initialState: defines the init state of the game
-  - applyAction: creates a modified game state with some action
-  - isGameOver: bool, return if game is over or not
-  - ShootPath: takes in directions to shoot the arrow, fires an arrow in some direction
-
-Initialize game loop with starting game state
-Loop through the game, each time asking the user for an input
-Addressing the input, and recursing on the new game state
--}
+  putStrLn "4. Winning the Game:"
+  putStrLn "   - Kill the Wumpus by shooting it with an arrow. Beware: you only have 3 arrows!"
+  putStrLn "   - Use your senses and logic to deduce the Wumpus's location and hazards in nearby caves."
+  putStrLn ""
+  putStrLn "5. Strategy Tips:"
+  putStrLn "   - Use your senses wisely to gather information before moving or shooting."
+  putStrLn "   - Plan your moves carefully to avoid hazards."
+  putStrLn "   - If you miss the Wumpus, it may flee and change its position, so stay alert!"
+  putStrLn ""
+  putStrLn "6. Important Notes:"
+  putStrLn "   - The Wumpus does not move unless startled by an arrow."
+  putStrLn "   - Arrows cannot travel more than 5 caves in a single shot."
+  putStrLn ""
+  putStrLn "Good luck, brave adventurer! May your aim be true and your steps cautious."
+  putStrLn ""

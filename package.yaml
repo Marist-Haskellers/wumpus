@@ -22,7 +22,7 @@ description:         Please see the README on GitHub at <https://github.com/Tien
 dependencies:
 - base >= 4.8 && < 5
 - mtl >= 2.2 && < 2.3
-- random >= 1.2.1
+- random >= 1.1
 - random-shuffle >= 0.0.4
 
 ghc-options:
