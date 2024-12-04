@@ -1,16 +1,4 @@
-<<<<<<< HEAD
 module Types where
-=======
-module Types (
-  PlayerState(..),
-  EnvironmentState,
-  Hazard(..),
-  CaveLayout,
-  Position,
-  wumpusPosition,
-  WumpusState(..)
-) where
->>>>>>> 268ffa67c9937e4ed115a1f90be7d9c44e211b73
 
 type Position = Int
 
@@ -42,7 +30,7 @@ data EnvironmentState = EnvironmentState
   { hazards :: [(Position, Hazard)]
   }
 
-data Hazard = Bats | Pit deriving Show
+data Hazard = Bats | Pit deriving (Eq, Show)
 
 type CaveLayout = [(Position, [Position])]
 
