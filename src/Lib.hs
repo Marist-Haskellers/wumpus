@@ -5,6 +5,7 @@ import Types (GameState(..), Choice(..), PlayerState(..))
 import IO (getChoiceFromUser, getMoveFromUser, output)
 import GameLogic (StartGameState (..), createStartState, decahedron)
 import System.Random
+import Hazards
 
 startGame :: IO GameState
 startGame = do 
@@ -41,7 +42,11 @@ oneLoop gameState = do
                 environmentState=environmentState gameState
                 }
         ChoiceSense -> do
-            -- Handle Sense logic
+            let hazards = hazards (environmentState gameState)
+            let layout = caveLayout (environmentState gameState)
+            let sensed = senseHazards curPos layout hazards
+            output ("You sense: " ++ unwords (map show sensed))
+            oneLoop gameState
             return gameState
         ChoiceShoot -> do
             -- Handle Shoot logic

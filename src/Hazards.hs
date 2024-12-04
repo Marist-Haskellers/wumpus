@@ -1,12 +1,9 @@
-module Hazards where
-import Types (Hazard(..))
-import Types (Sense(..))
-import Types (Position(..))
-import Types (CaveLayout(..))
+import Types(Sense(Feel, Hear), Hazard(Pit, Bats), Position, CaveLayout )
+
+
 toSense :: Hazard -> Sense
 toSense Bats = Hear
 toSense Pit  = Feel
-
 
 senseHazards :: Position -> CaveLayout -> [(Position, Hazard)] -> [Sense]
 senseHazards position layout hazards =
@@ -21,3 +18,5 @@ handleHazards position hazards =
         Just Bats -> Just "A swarm of super-bats swoops in and lifts you away."
         Just Pit  -> Just "You fell into a bottomless pit and died."
         Nothing   -> Nothing
+
+    
