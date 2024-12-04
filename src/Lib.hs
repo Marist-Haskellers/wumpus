@@ -2,7 +2,7 @@ module Lib
     ( startGame
     ) where
 import Types (GameState(..), Choice(..), PlayerState(..))
-import IO (getChoiceFromUser, getMoveFromUser, output)
+import IO (getChoiceFromUser, getMoveFromUser, output, getSenseFromUser)
 import GameLogic (StartGameState (..), createStartState, decahedron)
 import System.Random
 import Hazards
@@ -42,12 +42,11 @@ oneLoop gameState = do
                 environmentState=environmentState gameState
                 }
         ChoiceSense -> do
-            let hazards = hazards (environmentState gameState)
-            let layout = caveLayout (environmentState gameState)
-            let sensed = senseHazards curPos layout hazards
-            output ("You sense: " ++ unwords (map show sensed))
+            sense <- getSenseFromUser
+            let sensed = senseHazards gameState
+            let senseString = if sense `elem` sensed then "You sense: " else "You do not sense: "
+            output (senseString ++ show sense)
             oneLoop gameState
-            return gameState
         ChoiceShoot -> do
             -- Handle Shoot logic
             return gameState

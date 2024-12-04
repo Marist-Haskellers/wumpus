@@ -8,7 +8,7 @@ toSense Pit  = Feel
 
 senseHazards :: GameState -> [Sense]
 senseHazards gameState = do
-    -- maybe there should be a better way
+    -- maybe there should be a better way to list movement options
     let movementOptions = [Types.Left, Types.Right, Types.Back];
     let currentPos = currentPosition (playerState gameState)
     let lastPos = lastPosition (playerState gameState)

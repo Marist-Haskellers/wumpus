@@ -13,7 +13,7 @@ type Position = Int
 data Move = Left | Right | Back deriving(Show)
 type MoveInMap = Position -> Position -> Move -> Position
 
-data Sense = Hear | Feel | Smell deriving(Show)
+data Sense = Hear | Feel | Smell deriving(Show, Eq)
 
 data Choice = ChoiceMove | ChoiceSense | ChoiceShoot deriving(Show)
 
