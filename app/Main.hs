@@ -1,8 +1,8 @@
-{-# OPTIONS_GHC -Wno-missing-export-lists #-}
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 
-module Main where
+module Main (module Main) where
 
+import Control.Monad (unless, when)
 import Data.Char (toLower)
 import Data.Maybe (fromJust, fromMaybe, isJust)
 import Lib
@@ -17,6 +17,7 @@ main = do
   putStrLn ""
   gen <- newStdGen
   let initialGameState = initialState gen -- Initialize game state
+  debug True initialGameState -- Debugging for game state
   gameLoopIO initialGameState -- Begin game loop
 
 gameLoopIO :: GameState -> IO ()
@@ -24,7 +25,8 @@ gameLoopIO state = do
   putStrLn $ "You're inside cave #" ++ showState state -- Display current cave
   case gameStatus state of
     GameOver reason -> putStrLn $ "Game over! Reason: " ++ reason
-    Ongoing -> do
+    Ongoing message -> do
+      unless (null message) (putStrLn message) -- Print the ongoing status message if present
       putStrLn "Perform an action:"
       input <- getLine
       -- Handle "rules" input
@@ -35,9 +37,7 @@ gameLoopIO state = do
         else case parseInput state input of
           -- Handle valid input
           Just action -> do
-            newState <- setState (playerState state) action state
-            -- Handle senses if the action is a SenseAction
-            putStrLn ""
+            let newState = setState (playerState state) action state
             gameLoopIO newState
           -- Handle invalid input
           Nothing -> do
@@ -50,6 +50,18 @@ gameLoopIO state = do
 isSenseAction :: Action -> Bool
 isSenseAction (SenseAction _) = True
 isSenseAction _ = False
+
+debug :: Bool -> GameState -> IO ()
+debug debugging state =
+  when debugging $ do
+    putStrLn "Debugging Enabled: Initial Game State"
+    putStrLn $ "Player Position: " ++ show (playerPosition $ playerState state)
+    putStrLn $ "Player Last Position: " ++ show (lastPosition $ playerState state)
+    putStrLn $ "Player Arrow Count: " ++ show (playerArrowCount $ playerState state)
+    putStrLn $ "Wumpus Position: " ++ show (wumpusPosition $ wumpusState state)
+    putStrLn $ "Hazards: " ++ show (hazards $ environmentState state)
+    putStrLn $ "Game Status: " ++ show (gameStatus state)
+    putStrLn ""
 
 parseInput :: GameState -> String -> Maybe Action
 parseInput state input =
@@ -99,14 +111,14 @@ showState state = show (playerPosition $ playerState state)
 initialState :: StdGen -> GameState
 initialState gen =
   let -- Generate random positions for hazards using `getRandomPosition` from Lib.hs
-      (bats1, _, gen1) = getRandomPosition gen decahedron
-      (bats2, _, gen2) = getRandomPosition gen1 decahedron
-      (pits1, _, gen3) = getRandomPosition gen2 decahedron
-      (pits2, _, gen4) = getRandomPosition gen3 decahedron
+      (bats1, gen1) = findSafePosition gen [] decahedron
+      (bats2, gen2) = findSafePosition gen1 [(bats1, Bats)] decahedron
+      (pits1, gen3) = findSafePosition gen2 [(bats1, Bats), (bats2, Bats)] decahedron
+      (pits2, gen4) = findSafePosition gen3 [(bats1, Bats), (bats2, Bats), (pits1, Pit)] decahedron
       hazards = [(bats1, Bats), (bats2, Bats), (pits1, Pit), (pits2, Pit)]
 
       -- Generate Wumpus position
-      (wumpusPos, gen5) = selectRandomElement gen4 (map fst decahedron)
+      (wumpusPos, gen5) = findSafePosition gen4 hazards decahedron
 
       -- Ensure the player starts in a safe position
       (playerPos, lastPos, gen6) = findSafePlayerPosition gen5 hazards decahedron
@@ -115,7 +127,7 @@ initialState gen =
       player = Player {playerPosition = playerPos, lastPosition = lastPos, playerArrowCount = 3, playerHasShot = False}
       wumpus = WumpusState {wumpusPosition = wumpusPos}
       environment = EnvironmentState {hazards = hazards}
-   in GameState {playerState = player, wumpusState = wumpus, environmentState = environment, gen = gen6, gameStatus = Ongoing}
+   in GameState {playerState = player, wumpusState = wumpus, environmentState = environment, gen = gen6, gameStatus = Ongoing ""}
 
 rules :: IO ()
 rules = do

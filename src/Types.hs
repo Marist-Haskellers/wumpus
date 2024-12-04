@@ -11,7 +11,7 @@ import System.Random (StdGen)
 
 type Position = Int
 
-data GameStatus = Ongoing | GameOver String deriving (Show, Eq)
+data GameStatus = Ongoing String | GameOver String deriving (Show, Eq)
 
 -- if move is an enum then it forces the game to have
 --    # of enums amount of connections per cave

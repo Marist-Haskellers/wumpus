@@ -1,19 +1,8 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 {-# OPTIONS_GHC -Wno-unused-do-bind #-}
 
-module Lib
-  ( selectRandomElement,
-    getRandomPosition,
-    move,
-    setState,
-    handleMovement,
-    handleShooting,
-    handleSensing,
-    findSafePlayerPosition,
-  )
-where
+module Lib (module Lib) where
 
--- import Data.List (elemIndex)
 import Data.Maybe (fromMaybe)
 import System.Random as Random
 import Types
@@ -41,19 +30,12 @@ move layout currentPosition previousPosition moveType =
           ++ show previousPosition
 
 -- Function that modifies the state of the game depending on the players actions
-setState :: PlayerState -> Action -> GameState -> IO GameState
+setState :: PlayerState -> Action -> GameState -> GameState
 setState player action gameState =
   case action of
-    MoveAction moveDir ->
-      -- Existing movement logic
-      return $ handleMovement player moveDir gameState
-    ShootAction path ->
-      -- Shooting logic
-      return $ handleShooting player path gameState
-    SenseAction sense -> do
-      putStrLn ""
-      handleSensing player sense gameState
-      return gameState
+    MoveAction moveDir -> handleMovement player moveDir gameState
+    ShootAction path -> handleShooting player path gameState
+    SenseAction sense -> handleSensing player sense gameState
 
 -- Function to handle movement of player
 -- Take in current player state, action they performed, current game state, and gives new game state
@@ -98,13 +80,13 @@ handleMovement player moveDir gameState =
                   { playerPosition = randPos,
                     lastPosition = randLastPos
                   }
-           in (transportedPlayer, newStdGen, Ongoing)
+           in (transportedPlayer, newStdGen, Ongoing "The bats grab you by the arms and fly you to an unknown cave.")
         Just Pit ->
           -- Player falls into a pit, game over
           (updatedPlayer, genVal, GameOver "You fell into a pit!")
         Nothing ->
           -- No hazard encountered
-          (updatedPlayer, genVal, Ongoing)
+          (updatedPlayer, genVal, Ongoing "")
 
       -- Handle Wumpus encounter with random chance
       (finalPlayer, finalWumpus, finalGen, finalStatus) =
@@ -121,7 +103,7 @@ handleMovement player moveDir gameState =
                         (idx, updatedGen') = Random.randomR (0, length connections - 1) newStdGen :: (Int, Random.StdGen)
                         newWumpusPos = connections !! idx
                         newWumpus = wumpus {wumpusPosition = newWumpusPos}
-                     in (interimPlayer, newWumpus, updatedGen', Ongoing)
+                     in (interimPlayer, newWumpus, updatedGen', Ongoing "The wumpus flees to a random cave.")
           else
             -- No Wumpus encounter
             (interimPlayer, wumpus, interimGen, interimStatus)
@@ -175,33 +157,40 @@ handleShooting player path gameState =
 
       -- If the arrow misses and the game is ongoing, the Wumpus may move
       (updatedWumpusState, finalGen) =
-        if not arrowHitsWumpus && finalGameStatus == Ongoing
+        if not arrowHitsWumpus && finalGameStatus == Ongoing "Your arrow missed the Wumpus."
           then moveWumpusRandomly wumpus genVal
           else (wumpus, genVal)
 
       -- Update the player's arrow count
-      updatedPlayer = player {playerArrowCount = remainingArrows, playerHasShot = True}
+      updatedPlayer =
+        player
+          { playerArrowCount = remainingArrows,
+            playerHasShot = True
+          }
+
+      statusMessage =
+        if arrowHitsWumpus
+          then "Your arrow hit the Wumpus!"
+          else "Your arrow missed the Wumpus. You have " ++ show remainingArrows ++ " arrows left."
    in gameState
         { playerState = updatedPlayer,
           wumpusState = updatedWumpusState,
           gen = finalGen,
-          gameStatus = finalGameStatus
+          gameStatus = Ongoing statusMessage
         }
 
-handleSensing :: PlayerState -> Sense -> GameState -> IO GameState
-handleSensing player sense gameState = do
+handleSensing :: PlayerState -> Sense -> GameState -> GameState
+handleSensing player sense gameState =
   let currentPos = playerPosition player
       senseData = generateSenseData decahedron gameState
-  case lookup currentPos senseData of
-    Just senseList ->
-      let filteredList = filter (== sense) senseList
-       in if null filteredList
-            then putStrLn "The cave feels eerily quiet. There are no hazards nearby."
-            else do
-              putStrLn "Your senses are tingling. You detect:"
-              mapM_ (putStrLn . describeSense) filteredList
-    Nothing -> putStrLn "You sense nothing unusual."
-  return gameState -- Return the unchanged GameState
+      message = case lookup currentPos senseData of
+        Just senseList ->
+          let filteredList = filter (== sense) senseList
+           in if null filteredList
+                then "There are no hazards nearby able to be sensed with this sense."
+                else unlines $ map describeSense filteredList
+        Nothing -> "You sense nothing unusual."
+   in gameState {gameStatus = Ongoing message}
 
 validateArrowPath :: Position -> [Position] -> Bool
 validateArrowPath _ [] = True -- Empty path is valid
@@ -245,3 +234,19 @@ findSafePlayerPosition gen hazards cave =
    in if playerPos `elem` unsafePositions
         then findSafePlayerPosition newGen hazards cave -- Retry until safe
         else (playerPos, lastPos, newGen)
+
+-- Helper to find a safe position
+getStartingPosition :: StdGen -> CaveLayout -> (Position, StdGen)
+getStartingPosition gen caveLayout =
+  let allPositions = map fst caveLayout
+      (newPos, newGen) = selectRandomElement gen allPositions
+   in (newPos, newGen)
+
+-- I/O helper function to check if a cave has a hazard in it, for spawning the hazards in a ransom state
+findSafePosition :: StdGen -> [(Position, Hazard)] -> CaveLayout -> (Position, StdGen)
+findSafePosition gen hazards cave =
+  let unsafePositions = map fst hazards
+      (newPos, newGen) = getStartingPosition gen cave
+   in if newPos `elem` unsafePositions
+        then findSafePosition newGen hazards cave -- Retry until safe
+        else (newPos, newGen)
