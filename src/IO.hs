@@ -32,24 +32,28 @@ playerMoveToGame move = case move of
     _   -> Nothing
 
 -- have the player input the direction of the arrow move
-getArrowMoveFromUser :: IO Move
+getArrowMoveFromUser :: IO (Maybe Move)
 getArrowMoveFromUser = do
-    output "Enter your move (1 for Left, 2 for Right): "
+    output "Enter your move (1 for Left, 2 for Right, 3 to Stop shooting): "
     move <- getLine  -- Read user input
-    case playerMoveToGame move of
+    case arrowMoveToGame move of
         Just validMove -> do
-            output $ "You selected: " ++ show validMove
-            return validMove
+            if validMove == Stop 
+                then return Nothing -- stop execution
+                else do
+                    output $ "You selected: " ++ show validMove
+                    return (Just validMove)
         Nothing -> do
             output "Invalid Option: Please try again."
-            getMoveFromUser  -- Recursively call until valid input is received
+            getArrowMoveFromUser  -- Recursively call until valid input is received
 
 -- Function to convert user input string for arrow to the Move type
 arrowMoveToGame :: String -> Maybe Move
 arrowMoveToGame move = case move of
     "1" -> Just Types.Left
     "2" -> Just Types.Right
-    _   -> Nothing
+    "3"  -> Just Types.Stop
+    _ -> Nothing
 
 
 -- have the player input the direction of the arrow move
@@ -99,3 +103,5 @@ output = putStrLn
 
 -- if the arrow ends up in the room with the wumpus, it kills the wumpus 
 -- otherwise the wumpus gets scared and moves rooms (it cannot be killed)
+
+

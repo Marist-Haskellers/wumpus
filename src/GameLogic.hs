@@ -90,3 +90,4 @@ createStartState startGameState = GameState
 -- main goal is to check for hazard / wumpus
 onEnterNewRoom :: GameState -> GameState
 onEnterNewRoom = undefined
+
