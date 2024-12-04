@@ -1,14 +1,56 @@
+<<<<<<< HEAD
+module Lib
+    ( someFunc,
+    initializeWumpus,
+    initializeEnvironment
+    ) where
+=======
 module Lib where
 
 import Types
 
 import System.Random
+<<<<<<< HEAD
 import Data.List
 import Control.Monad.Cont
+=======
+import Data.List ( nub )
+<<<<<<< HEAD
+import Control.Monad.Cont (when)
+=======
+import Data.Char (toLower)
+>>>>>>> 268ffa67c9937e4ed115a1f90be7d9c44e211b73
+>>>>>>> 744ce6c9946fd13de3fa566765eca47bca5a2c40
+
+import Types ( WumpusState(WumpusState), wumpusPosition, Position, Hazard (..), PlayerState (..), lastPostion, playerPosition)
+import System.Random ( StdGen, randomR, randomRs )
+import Data.List ( nub )
+>>>>>>> f93093e662f14f95989ca8a92cb69de3a9fcc6c9
 
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
 
+<<<<<<< HEAD
+initializeWumpus :: StdGen -> (WumpusState, StdGen)
+initializeWumpus gen =
+    let (pos, newGen) = randomR (1, 20) gen --generates new position
+    in (WumpusState { wumpusPosition = pos }, newGen)
+
+--Enviornment initialization
+initializeEnvironment :: StdGen -> [(Position, Hazard)]
+initializeEnvironment g =
+    let positions = take 4 $ nub $ map (+1) $ randomRs (1, 20) g -- Unique positions from 1 to 20
+        [p1, p2, b1, b2] = positions -- Extract positions for hazards
+    in [(p1, Pit), (p2, Pit), (b1, Bats), (b2, Bats)]
+
+initializePlayer :: Int -> PlayerState
+initializePlayer _ =
+    let arrows = 3
+        pos = 1
+        lastPos = 2 in
+        PlayerState {playerPosition = pos, lastPosition = lastPos, playerArrowCount = arrows}
+
+=======
 data Move = MoveLeft | MoveRight | MoveBack deriving Show
 
 initializeWumpus :: StdGen -> (WumpusState, StdGen)
@@ -135,6 +177,7 @@ gameLoop gs = do
             putStrLn $ "You are in cave " ++ show currentPos
             putStrLn $ "You can go to caves: " ++ formatConnections connections
 
+<<<<<<< HEAD
             -- Print senses
             let nearbyHazards = [(p, h) | p <- connections, (pos, h) <- hazards $ environment gs, p == pos]
             let wumpusNear = any (\p -> p == wumpusPosition (wumpus gs)) connections
@@ -166,3 +209,7 @@ formatConnections [x] = show x
 formatConnections [x,y] = show x ++ " or " ++ show y
 formatConnections [x,y,z] = show x ++ ", " ++ show z ++ " or " ++ show y 
 formatConnections (x:xs) = show x ++ ", " ++ formatConnections xs
+=======
+>>>>>>> 268ffa67c9937e4ed115a1f90be7d9c44e211b73
+>>>>>>> 744ce6c9946fd13de3fa566765eca47bca5a2c40
+>>>>>>> f93093e662f14f95989ca8a92cb69de3a9fcc6c9
