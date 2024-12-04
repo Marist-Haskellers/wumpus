@@ -1,4 +1,13 @@
-module Types where
+module Types (
+  PlayerState(..),
+  EnvironmentState,
+  Hazard(..),
+  CaveLayout,
+  Position,
+  wumpusPosition,
+  WumpusState(..)
+) where
+
 
 type Position = Int
 
@@ -9,18 +18,18 @@ type Position = Int
 --    or move names which are incorrect (e.i. moving left when in that postion you can only move right)
 -- For a decahedron it Left Right Back make sense for every move as you will always have those options
 --    if orientated correctly
-<<<<<<< HEAD
+
 data Move = MoveLeft | MoveRight | Back
 
 
-=======
+
 
 data GameState = GameState {
     wumpus :: WumpusState,
     environment :: EnvironmentState,
     player :: PlayerState
 }
->>>>>>> 744ce6c9946fd13de3fa566765eca47bca5a2c40
+
 
 data PlayerState = PlayerState {
   playerPosition :: Position,
@@ -28,32 +37,25 @@ data PlayerState = PlayerState {
   playerArrowCount :: Int
 } deriving Show
 
-<<<<<<< HEAD
+
 data WumpusState = WumpusState
   { wumpusPosition :: Position
   }
   deriving (Show)
-=======
-data WumpusState = WumpusState {
-  wumpusPosition :: Position
-} deriving Show
->>>>>>> 744ce6c9946fd13de3fa566765eca47bca5a2c40
+
+
 
 data EnvironmentState = EnvironmentState
   { hazards :: [(Position, Hazard)],
   currentPosition :: Position
   }
 
-<<<<<<< HEAD
-data Hazard = Bats | Pit deriving (Eq, Show)
-=======
-<<<<<<< HEAD
+
 data Hazard = Bats | Pit
   deriving (Show)
-=======
-data Hazard = Bats | Pit deriving Show
->>>>>>> 744ce6c9946fd13de3fa566765eca47bca5a2c40
->>>>>>> f93093e662f14f95989ca8a92cb69de3a9fcc6c9
+
+
+
 
 type CaveLayout = [(Position, [Position])]
 
@@ -82,7 +84,7 @@ decahedron =
     (20, [13, 16, 19])
   ]
 
-<<<<<<< HEAD
+
 -- CaveLayout -> Current Position -> Last Position -> Move -> Position
 move :: CaveLayout -> Position -> Position -> Move -> Position
 move layout current last moveDirection =  -- Corrected function definition
@@ -97,6 +99,3 @@ move layout current last moveDirection =  -- Corrected function definition
     MoveLeft  -> shiftedConnections !! 1  -- Second item in the list
     MoveRight -> shiftedConnections !! 2   -- Third item in the list
     Back      -> last
-=======
-
->>>>>>> 744ce6c9946fd13de3fa566765eca47bca5a2c40
