@@ -3,7 +3,7 @@ module Lib
     ) where
 import Types (GameState(..), Choice(..), PlayerState(..))
 import IO (getChoiceFromUser, getMoveFromUser, output, getSenseFromUser)
-import GameLogic (StartGameState (..), createStartState, decahedron)
+import GameLogic (StartGameState (..), createStartState, decahedron, shootArrow)
 import System.Random
 import Hazards
 
@@ -48,21 +48,14 @@ oneLoop gameState = do
             output (senseString ++ show sense)
             oneLoop gameState
         ChoiceShoot -> do
-            -- Handle Shoot logic
-            return gameState
+            -- check gameState to see if you have arrows in the first place (0 will give a specific prompt)
+            arrowEnumList <- shootArrow -- collect the arrow moves
+
+            -- the arrow will have to move through the rooms, and on the last one will have to see if it hit the wumpus or if it startled the wumpus
+            -- also update the arrow count
+            oneLoop gameState
 
 
--- -- Function to collect up to 5 moves from the user
--- shootArrow :: IO [Move]
--- shootArrow = collectMoves 5 []  -- Start with an empty list and a max count of 5
 
--- -- Helper function to recursively collect moves
--- collectMoves :: Int -> [Move] -> IO [Move]
--- collectMoves 0 moves = return moves  -- Stop when the maximum number of moves is reached
--- collectMoves remaining moves = do
---     putStrLn $ "Moves collected so far: " ++ show moves
---     putStrLn $ "You can input up to " ++ show remaining ++ " more moves."
---     move <- getArrowMoveFromUser
---     case move of 
---         Nothing -> return moves -- return the list smaller than 5
---         Just validMove -> collectMoves (remaining - 1) (moves ++ [validMove])  -- Append the move and decrement the counter
+
+

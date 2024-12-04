@@ -4,6 +4,7 @@ import Data.List(elemIndex, find)
 import Data.Maybe (fromMaybe)
 import System.Random.Shuffle
 import System.Random
+import IO
 -- CaveLayout -> Current Position -> Last Position -> Move -> Position
 move :: CaveLayout -> Position -> Position -> Move -> Position
 -- Example of how last postion is helpful:
@@ -91,3 +92,17 @@ createStartState startGameState = GameState
 onEnterNewRoom :: GameState -> GameState
 onEnterNewRoom = undefined
 
+
+shootArrow :: IO [Move]
+shootArrow = collectMoves 5 []  -- Start with an empty list and a max count of 5
+
+-- Helper function to recursively collect moves
+collectMoves :: Int -> [Move] -> IO [Move]
+collectMoves 0 moves = return moves  -- Stop when the maximum number of moves is reached
+collectMoves remaining moves = do
+    putStrLn $ "Arrow moves collected so far: " ++ show moves
+    putStrLn $ "You can shoot the arrow " ++ show remaining ++ " more times."
+    move <- getArrowMoveFromUser
+    case move of 
+        Nothing -> return moves -- return the list smaller than 5
+        Just validMove -> collectMoves (remaining - 1) (moves ++ [validMove])  -- Append the move and decrement the counter
