@@ -1,6 +1,10 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
 {-# HLINT ignore "Use newtype instead of data" #-}
+{-# OPTIONS_GHC -Wno-unused-local-binds #-}
+{-# OPTIONS_GHC -Wno-unused-matches #-}
+
+{-# HLINT ignore "Use forM_" #-}
+
 module Types (module Types) where
 
 import System.Random (StdGen)

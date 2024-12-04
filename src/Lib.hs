@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
+{-# OPTIONS_GHC -Wno-unused-do-bind #-}
+
 module Lib
   ( selectRandomElement,
     getRandomPosition,

@@ -1,6 +1,8 @@
+{-# OPTIONS_GHC -Wno-missing-export-lists #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
+
 module Main where
 
-import Control.Monad (when)
 import Data.Char (toLower)
 import Data.Maybe (fromJust, fromMaybe, isJust)
 import Lib
@@ -81,7 +83,7 @@ translatePath currentPos (dir : dirs) layout =
     Just connections ->
       -- next position corresponds to where the arrow will end up
       let nextPos = case dir of
-            "left" -> Just (connections !! 0) -- Left cave
+            "left" -> Just (head connections) -- Left cave
             "right" -> Just (connections !! 1) -- Right cave
             "back" -> Just (connections !! 2) -- Previous cave
             _ -> Nothing
@@ -122,15 +124,16 @@ rules = do
   putStrLn ""
   putStrLn "Welcome to Hunt the Wumpus! Your mission is to locate and kill the deadly Wumpus hiding in the caves."
   putStrLn "Kill the Wumpus by shooting it with an arrow. Be careful, the Wumpus may kill you or flee if you startle it!"
+  putStrLn "Be careful not to enter the Wumpus's cave, its putrid smell is too potent and instantly kills you."
   putStrLn ""
   putStrLn "2. How to play:"
   putStrLn "   - Move <direction>: Move to a connected cave. Choose either 'move left', 'move right', or 'move back'."
   putStrLn "   - Sense <sense>: Use your senses to gather information on your surroundings."
   putStrLn "       'sense smell' - Detect if the Wumpus is nearby."
-  putStrLn "       'sense hear' - Listen for the flapping wings of bats."
+  putStrLn "       'sense listen' - Listen for the flapping wings of bats."
   putStrLn "       'sense feel' - Feel for drafts near a bottomless pit."
   putStrLn "   - Shoot <path>: Fire an arrow on a path of up to 5 caves. The arrow may hit or scare the Wumpus."
-  putStrLn "       'shoot left, right, back...' - Detect if the Wumpus is nearby."
+  putStrLn "       'shoot left right back...' - Detect if the Wumpus is nearby."
   putStrLn ""
   putStrLn "3. Hazards in the Caves:"
   putStrLn "   - The Wumpus: If you enter its cave, there's a 50/50 chance it will either kill you or flee to a neighboring cave."
