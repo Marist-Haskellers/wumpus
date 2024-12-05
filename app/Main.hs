@@ -17,7 +17,7 @@ main = do
   putStrLn ""
   gen <- newStdGen
   let initialGameState = initialState gen -- Initialize game state
-  debug True initialGameState -- Debugging for game state
+  debug False initialGameState -- Debugging for game state
   gameLoopIO initialGameState -- Begin game loop
 
 gameLoopIO :: GameState -> IO ()
@@ -28,25 +28,20 @@ gameLoopIO state = do
       putStrLn caveData
       putStrLn $ "Game over! Reason: " ++ reason
     Ongoing message -> do
-      unless (null message) (putStrLn message) -- Print the ongoing status message if present
+      unless (null message) (putStrLn $ "\n" ++ message) -- Print the ongoing status message if present
       putStrLn caveData
       putStrLn "Perform an action:"
       input <- getLine
-      -- Handle "rules" input
       if map toLower input == "rules"
         then do
           rules
           gameLoopIO state -- Continue the game loop after displaying the rules
         else case parseInput state input of
-          -- Handle valid input
           Just action -> do
             let newState = setState (playerState state) action state
             gameLoopIO newState
-          -- Handle invalid input
           Nothing -> do
-            putStrLn ""
-            putStrLn "Invalid action"
-            putStrLn ""
+            putStrLn "\nInvalid action"
             gameLoopIO state -- Re-ask for input
 
 -- Helper function to check if an action is a sense

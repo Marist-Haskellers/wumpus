@@ -125,39 +125,17 @@ handleShooting player path gameState =
       wumpusPos = wumpusPosition wumpus
       remainingArrows = playerArrowCount player - 1
 
-      -- Check if the player has arrows left
-      gameStatus' =
-        if remainingArrows < 0
-          then GameOver "You have no arrows left!"
-          else gameStatus gameState
+      -- Determine the final game status based on various conditions
+      finalGameStatus
+        | remainingArrows < 0 = GameOver "You have no arrows left!"
+        | length path > 5 = GameOver "Your arrow cannot travel more than 5 caves!"
+        | not (validateArrowPath (playerPosition player) path) = GameOver "Invalid arrow path!"
+        | wumpusPos `elem` path = GameOver "You have killed the Wumpus! You win!"
+        | otherwise = Ongoing "Your arrow missed the Wumpus. The Wumpus may have moved."
 
-      -- Check if the arrow path exceeds the maximum length
-      gameStatus'' =
-        if length path > 5
-          then GameOver "Your arrow cannot travel more than 5 caves!"
-          else gameStatus'
-
-      -- Validate the arrow path
-      isValidPath = validateArrowPath (playerPosition player) path
-
-      -- Update game status if path is invalid
-      gameStatus''' =
-        if not isValidPath
-          then GameOver "Invalid arrow path!"
-          else gameStatus''
-
-      -- Determine if the arrow hits the Wumpus
-      arrowHitsWumpus = wumpusPos `elem` path
-
-      -- Update game status if the Wumpus is hit
-      finalGameStatus =
-        if arrowHitsWumpus
-          then GameOver "You have killed the Wumpus! You win!"
-          else gameStatus'''
-
-      -- If the arrow misses and the game is ongoing, the Wumpus may move
+      -- Update Wumpus state only if the arrow misses
       (updatedWumpusState, finalGen) =
-        if not arrowHitsWumpus && finalGameStatus == Ongoing "Your arrow missed the Wumpus."
+        if finalGameStatus == Ongoing "Your arrow missed the Wumpus. The Wumpus may have moved."
           then moveWumpusRandomly wumpus genVal
           else (wumpus, genVal)
 
@@ -167,16 +145,11 @@ handleShooting player path gameState =
           { playerArrowCount = remainingArrows,
             playerHasShot = True
           }
-
-      statusMessage =
-        if arrowHitsWumpus
-          then "Your arrow hit the Wumpus!"
-          else "Your arrow missed the Wumpus. You have " ++ show remainingArrows ++ " arrows left."
    in gameState
         { playerState = updatedPlayer,
           wumpusState = updatedWumpusState,
           gen = finalGen,
-          gameStatus = Ongoing statusMessage
+          gameStatus = finalGameStatus
         }
 
 handleSensing :: PlayerState -> Sense -> GameState -> GameState
