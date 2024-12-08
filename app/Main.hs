@@ -15,9 +15,23 @@ main = do
   rules
   putStrLn "To see the rules at any time just type 'rules'."
   putStrLn ""
+
+  -- Prompt for map selection
+  putStrLn "Choose your cave layout:"
+  putStrLn "1. Decahedron (default)"
+  putStrLn "2. Hexagon"
+  putStrLn "3. Triangle"
+  putStrLn ""
+  putStrLn "Enter your cave choice:"
+
+  choice <- getLine
+  let chosenLayout = case choice of
+        "2" -> hexagon
+        "3" -> triangle
+        _ -> decahedron -- Default map is the decahedron
   gen <- newStdGen
-  let initialGameState = initialState gen -- Initialize game state
-  debug False initialGameState -- Debugging for game state
+  let initialGameState = initialState gen chosenLayout
+  debug True initialGameState -- Debugging for game state
   gameLoopIO initialGameState -- Begin game loop
 
 gameLoopIO :: GameState -> IO ()
@@ -36,9 +50,9 @@ gameLoopIO state = do
         then do
           rules
           gameLoopIO state -- Continue the game loop after displaying the rules
-        else case parseInput state input of
+        else case parseInput state input (caveLayout state) of
           Just action -> do
-            let newState = setState (playerState state) action state
+            let newState = setState (playerState state) action state (caveLayout state)
             gameLoopIO newState
           Nothing -> do
             putStrLn "\nInvalid action"
@@ -61,8 +75,8 @@ debug debugging state =
     putStrLn $ "Game Status: " ++ show (gameStatus state)
     putStrLn ""
 
-parseInput :: GameState -> String -> Maybe Action
-parseInput state input =
+parseInput :: GameState -> String -> CaveLayout -> Maybe Action
+parseInput state input caveLayout =
   -- break the input into lowercase words to be further distinguished
   case words (map toLower input) of
     ("move" : dir : _) -> case dir of
@@ -72,7 +86,7 @@ parseInput state input =
       _ -> Nothing
     ("shoot" : path) ->
       let currentPos = playerPosition $ playerState state
-          parsedPath = translatePath currentPos path decahedron
+          parsedPath = translatePath currentPos path caveLayout
        in if all isJust parsedPath -- if all paths are just the parse path, and not nothing
             then Just $ ShootAction (map fromJust parsedPath) -- then shoot with path whose just part is removed from the parsed paths
             else Nothing
@@ -106,26 +120,26 @@ showState :: GameState -> String
 showState state = show (playerPosition $ playerState state)
 
 -- Initial game state
-initialState :: StdGen -> GameState
-initialState gen =
-  let -- Generate random positions for hazards using `getRandomPosition` from Lib.hs
-      (bats1, gen1) = findSafePosition gen [] decahedron
-      (bats2, gen2) = findSafePosition gen1 [(bats1, Bats)] decahedron
-      (pits1, gen3) = findSafePosition gen2 [(bats1, Bats), (bats2, Bats)] decahedron
-      (pits2, gen4) = findSafePosition gen3 [(bats1, Bats), (bats2, Bats), (pits1, Pit)] decahedron
+initialState :: StdGen -> CaveLayout -> GameState
+initialState gen caveLayout =
+  let -- Generate hazards and Wumpus position safely
+      (bats1, gen1) = findSafePosition gen [] caveLayout
+      (bats2, gen2) = findSafePosition gen1 [(bats1, Bats)] caveLayout
+      (pits1, gen3) = findSafePosition gen2 [(bats1, Bats), (bats2, Bats)] caveLayout
+      (pits2, gen4) = findSafePosition gen3 [(bats1, Bats), (bats2, Bats), (pits1, Pit)] caveLayout
       hazards = [(bats1, Bats), (bats2, Bats), (pits1, Pit), (pits2, Pit)]
 
       -- Generate Wumpus position
-      (wumpusPos, gen5) = findSafePosition gen4 hazards decahedron
+      (wumpusPos, gen5) = findSafePosition gen4 hazards caveLayout
 
       -- Ensure the player starts in a safe position
-      (playerPos, lastPos, gen6) = findSafePlayerPosition gen5 hazards decahedron
+      (playerPos, lastPos, gen6) = findSafePlayerPosition gen5 hazards caveLayout
 
-      -- Create initial states
+      -- Initialize components
       player = Player {playerPosition = playerPos, lastPosition = lastPos, playerArrowCount = 3, playerHasShot = False}
       wumpus = WumpusState {wumpusPosition = wumpusPos}
       environment = EnvironmentState {hazards = hazards}
-   in GameState {playerState = player, wumpusState = wumpus, environmentState = environment, gen = gen6, gameStatus = Ongoing ""}
+   in GameState {playerState = player, wumpusState = wumpus, environmentState = environment, gen = gen6, gameStatus = Ongoing "", caveLayout = caveLayout}
 
 rules :: IO ()
 rules = do

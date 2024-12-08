@@ -30,17 +30,17 @@ move layout currentPosition previousPosition moveType =
           ++ show previousPosition
 
 -- Function that modifies the state of the game depending on the players actions
-setState :: PlayerState -> Action -> GameState -> GameState
-setState player action gameState =
+setState :: PlayerState -> Action -> GameState -> CaveLayout -> GameState
+setState player action gameState caveLayout =
   case action of
-    MoveAction moveDir -> handleMovement player moveDir gameState
-    ShootAction path -> handleShooting player path gameState
-    SenseAction sense -> handleSensing player sense gameState
+    MoveAction moveDir -> handleMovement player moveDir gameState caveLayout
+    ShootAction path -> handleShooting player path gameState caveLayout
+    SenseAction sense -> handleSensing player sense gameState caveLayout
 
 -- Function to handle movement of player
 -- Take in current player state, action they performed, current game state, and gives new game state
-handleMovement :: PlayerState -> Move -> GameState -> GameState
-handleMovement player moveDir gameState =
+handleMovement :: PlayerState -> Move -> GameState -> CaveLayout -> GameState
+handleMovement player moveDir gameState caveLayout =
   let -- Extract fields from GameState
       wumpus = wumpusState gameState
       env = environmentState gameState
@@ -74,7 +74,7 @@ handleMovement player moveDir gameState =
       (interimPlayer, interimGen, interimStatus) = case hazard of
         Just Bats ->
           -- Transport player to a random position
-          let (randPos, randLastPos, newStdGen) = getRandomPosition genVal decahedron
+          let (randPos, randLastPos, newStdGen) = getRandomPosition genVal caveLayout
               transportedPlayer =
                 updatedPlayer
                   { playerPosition = randPos,
@@ -99,7 +99,7 @@ handleMovement player moveDir gameState =
                     (interimPlayer, wumpus, newStdGen, GameOver "You were eaten by the Wumpus!")
                   else
                     -- Wumpus flees to a random adjacent cave
-                    let connections = fromMaybe [] (lookup wumpusPos decahedron)
+                    let connections = fromMaybe [] (lookup wumpusPos caveLayout)
                         (idx, updatedGen') = Random.randomR (0, length connections - 1) newStdGen :: (Int, Random.StdGen)
                         newWumpusPos = connections !! idx
                         newWumpus = wumpus {wumpusPosition = newWumpusPos}
@@ -118,8 +118,8 @@ handleMovement player moveDir gameState =
           gameStatus = finalGameStatus
         }
 
-handleShooting :: PlayerState -> [Position] -> GameState -> GameState
-handleShooting player path gameState =
+handleShooting :: PlayerState -> [Position] -> GameState -> CaveLayout -> GameState
+handleShooting player path gameState caveLayout =
   let genVal = gen gameState
       wumpus = wumpusState gameState
       wumpusPos = wumpusPosition wumpus
@@ -129,14 +129,14 @@ handleShooting player path gameState =
       finalGameStatus
         | remainingArrows < 0 = GameOver "You have no arrows left!"
         | length path > 5 = GameOver "Your arrow cannot travel more than 5 caves!"
-        | not (validateArrowPath (playerPosition player) path) = GameOver "Invalid arrow path!"
+        | not (validateArrowPath caveLayout (playerPosition player) path) = GameOver "Invalid arrow path!"
         | wumpusPos `elem` path = GameOver "You have killed the Wumpus! You win!"
         | otherwise = Ongoing "Your arrow missed the Wumpus. The Wumpus may have moved."
 
       -- Update Wumpus state only if the arrow misses
       (updatedWumpusState, finalGen) =
         if finalGameStatus == Ongoing "Your arrow missed the Wumpus. The Wumpus may have moved."
-          then moveWumpusRandomly wumpus genVal
+          then moveWumpusRandomly caveLayout wumpus genVal
           else (wumpus, genVal)
 
       -- Update the player's arrow count
@@ -152,10 +152,10 @@ handleShooting player path gameState =
           gameStatus = finalGameStatus
         }
 
-handleSensing :: PlayerState -> Sense -> GameState -> GameState
-handleSensing player sense gameState =
+handleSensing :: PlayerState -> Sense -> GameState -> CaveLayout -> GameState
+handleSensing player sense gameState caveLayout =
   let currentPos = playerPosition player
-      senseData = generateSenseData decahedron gameState
+      senseData = generateSenseData caveLayout gameState
       message = case lookup currentPos senseData of
         Just senseList ->
           let filteredList = filter (== sense) senseList
@@ -165,12 +165,12 @@ handleSensing player sense gameState =
         Nothing -> "You sense nothing unusual.\n"
    in gameState {gameStatus = Ongoing message}
 
-validateArrowPath :: Position -> [Position] -> Bool
-validateArrowPath _ [] = True -- Empty path is valid
-validateArrowPath currentPos (nextPos : rest) =
-  case lookup currentPos decahedron of
+validateArrowPath :: CaveLayout -> Position -> [Position] -> Bool
+validateArrowPath _ _ [] = True -- Empty path is valid
+validateArrowPath caveLayout currentPos (nextPos : rest) =
+  case lookup currentPos caveLayout of
     Just connections ->
-      (nextPos `elem` connections) && validateArrowPath nextPos rest
+      (nextPos `elem` connections) && validateArrowPath caveLayout nextPos rest
     Nothing -> False -- Current position not found in the cave layout
 
 -- Helper function that generates a random position, used for Bats and Wumpus moving
@@ -191,10 +191,10 @@ getRandomPosition genValue cave =
       (lastPos, gen2) = selectRandomElement gen1 connections -- Random last position from connections
    in (newPos, lastPos, gen2)
 
-moveWumpusRandomly :: WumpusState -> Random.StdGen -> (WumpusState, Random.StdGen)
-moveWumpusRandomly currentWumpusState genValue =
+moveWumpusRandomly :: CaveLayout -> WumpusState -> StdGen -> (WumpusState, StdGen)
+moveWumpusRandomly caveLayout currentWumpusState genValue =
   let wumpusPos = wumpusPosition currentWumpusState
-      connections = fromMaybe [] (lookup wumpusPos decahedron)
+      connections = fromMaybe [] (lookup wumpusPos caveLayout)
       (newWumpusPos, newGen) = selectRandomElement genValue connections
       updatedWumpus = currentWumpusState {wumpusPosition = newWumpusPos}
    in (updatedWumpus, newGen)

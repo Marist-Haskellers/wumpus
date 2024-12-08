@@ -29,7 +29,8 @@ data GameState = GameState
     wumpusState :: WumpusState,
     environmentState :: EnvironmentState,
     gen :: StdGen,
-    gameStatus :: GameStatus
+    gameStatus :: GameStatus,
+    caveLayout :: CaveLayout
   }
   deriving (Show, Eq)
 
@@ -184,4 +185,22 @@ caveMap =
     ((20, 13), [16, 19]),
     ((20, 16), [19, 13]),
     ((20, 19), [13, 16])
+  ]
+
+-- Additional map for the cave
+hexagon :: CaveLayout
+hexagon =
+  [ (1, [2, 6]),
+    (2, [1, 3]),
+    (3, [2, 4]),
+    (4, [3, 5]),
+    (5, [4, 6]),
+    (6, [5, 1])
+  ]
+
+triangle :: CaveLayout
+triangle =
+  [ (1, [2, 3]),
+    (2, [1, 3]),
+    (3, [1, 2])
   ]
