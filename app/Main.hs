@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-name-shadowing #-}
-
 module Main (module Main) where
 
 import Control.Monad (unless, when)
@@ -29,10 +27,12 @@ main = do
         "2" -> hexagon
         "3" -> triangle
         _ -> decahedron -- Default map is the decahedron
-  gen <- newStdGen
-  let initialGameState = initialState gen chosenLayout
-  debug True initialGameState -- Debugging for game state
-  gameLoopIO initialGameState -- Begin game loop
+  generator <- newStdGen
+  let initialGameState = initialState generator chosenLayout
+  -- Debugging for game state
+  debug True initialGameState
+  -- Begin game loop
+  gameLoopIO initialGameState
 
 gameLoopIO :: GameState -> IO ()
 gameLoopIO state = do
@@ -46,34 +46,31 @@ gameLoopIO state = do
       putStrLn caveData
       putStrLn "Perform an action:"
       input <- getLine
-      if map toLower input == "rules"
-        then do
+      case map toLower input of
+        "rules" -> do
           rules
           gameLoopIO state -- Continue the game loop after displaying the rules
-        else case parseInput state input (caveLayout state) of
+        "debug" -> do
+          debug True state
+          gameLoopIO state
+        _ -> case parseInput state input (caveLayout state) of
           Just action -> do
-            let newState = setState (playerState state) action state (caveLayout state)
+            let newState = setState (playerState state) action state (caveLayout state) (moveLayout state)
             gameLoopIO newState
           Nothing -> do
             putStrLn "\nInvalid action"
-            gameLoopIO state -- Re-ask for input
-
--- Helper function to check if an action is a sense
-isSenseAction :: Action -> Bool
-isSenseAction (SenseAction _) = True
-isSenseAction _ = False
+            gameLoopIO (cleanState state) -- clean the state and re-ask for input
 
 debug :: Bool -> GameState -> IO ()
 debug debugging state =
   when debugging $ do
-    putStrLn "Debugging Enabled: Initial Game State"
+    putStrLn "\nDebugging Enabled: Game State"
+    putStrLn ""
     putStrLn $ "Player Position: " ++ show (playerPosition $ playerState state)
     putStrLn $ "Player Last Position: " ++ show (lastPosition $ playerState state)
     putStrLn $ "Player Arrow Count: " ++ show (playerArrowCount $ playerState state)
     putStrLn $ "Wumpus Position: " ++ show (wumpusPosition $ wumpusState state)
     putStrLn $ "Hazards: " ++ show (hazards $ environmentState state)
-    putStrLn $ "Game Status: " ++ show (gameStatus state)
-    putStrLn ""
 
 parseInput :: GameState -> String -> CaveLayout -> Maybe Action
 parseInput state input caveLayout =
@@ -131,15 +128,20 @@ initialState gen caveLayout =
 
       -- Generate Wumpus position
       (wumpusPos, gen5) = findSafePosition gen4 hazards caveLayout
+      hazardsWithWumpus = (wumpusPos, Wumpus) : hazards
 
       -- Ensure the player starts in a safe position
-      (playerPos, lastPos, gen6) = findSafePlayerPosition gen5 hazards caveLayout
+      (playerPos, lastPos, gen6) = findSafePlayerPosition gen5 hazardsWithWumpus caveLayout
 
       -- Initialize components
       player = Player {playerPosition = playerPos, lastPosition = lastPos, playerArrowCount = 3, playerHasShot = False}
       wumpus = WumpusState {wumpusPosition = wumpusPos}
-      environment = EnvironmentState {hazards = hazards}
-   in GameState {playerState = player, wumpusState = wumpus, environmentState = environment, gen = gen6, gameStatus = Ongoing "", caveLayout = caveLayout}
+      environment = EnvironmentState {hazards = hazardsWithWumpus}
+      moveSet = case caveLayout of
+        decahedron -> decahedronMap
+        hexagon -> hexagonMap
+        triangle -> triangleMap
+   in GameState {playerState = player, wumpusState = wumpus, environmentState = environment, gen = gen6, gameStatus = Ongoing "", caveLayout = caveLayout, moveLayout = moveSet}
 
 rules :: IO ()
 rules = do
