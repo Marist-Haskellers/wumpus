@@ -33,23 +33,25 @@ handleHazards gameState = do
                 gen = randomGen gameState
                 (doKill, newGen) = random gen :: (Bool, StdGen)
                 -- TODO this stopped compiling for some reason
-                -- (randomMove, newestGen) = random newGen :: (Move, StdGen)
-                (randomMove, newestGen) = undefined
+                (randomMove, newestGen) = random newGen :: (Move, StdGen)
                 message = if doKill 
-                    then Just "The Wumpus caught and devoured you" 
-                    else Just "The wumpus ran away from you"
+                    then Just "The Wumpus caught and ate you" 
+                    else Just "The Wumpus ran away from you"
                 oldWumpusPos = wumpusPosition (wumpusState gameState)
-                -- any valid last pos works
-                -- TODO
-                someLastPos = undefined
+                prevWumpusPos = lastWumpusPosition (wumpusState gameState)
                 moverInMap = mover gameState 
-                newWumpusPos = moverInMap oldWumpusPos someLastPos randomMove
+                -- can move anyways bc game is over
+                newWumpusPos = moverInMap oldWumpusPos prevWumpusPos randomMove
             in
             (
             message,
             gameState {
-                wumpusState=WumpusState {wumpusPosition=newWumpusPos},
-                randomGen=newestGen
+                wumpusState=WumpusState {
+                    wumpusPosition=newWumpusPos,
+                    lastWumpusPosition=oldWumpusPos
+                    },
+                randomGen=newestGen,
+                isAlive=not doKill
                 }
             ) 
         else handleEnvironmentHazards gameState
