@@ -2,8 +2,8 @@ module Lib where
     -- ( startGame
     -- ) where
 import Types (GameState(..), Choice(..), PlayerState(..))
-import IO (getChoiceFromUser, getMoveFromUser, output, getSenseFromUser)
-import GameLogic (StartGameState (..), createStartState, decahedron, shootArrow)
+import IO (getChoiceFromUser, getMoveFromUser, output, getSenseFromUser, playerMoveToGame)
+import GameLogic (StartGameState (..), createStartState, decahedron, shootArrow, updateArrowCount)
 import System.Random
 import Hazards
 
@@ -51,11 +51,19 @@ oneLoop gameState = do
             oneLoop gameState
         ChoiceShoot -> do
             -- check gameState to see if you have arrows in the first place (0 will give a specific prompt)
-            arrowEnumList <- shootArrow -- collect the arrow moves
+            if arrowCount (playerState gameState) <= 0
+            then do 
+                output "No arrows left to shoot."
+                oneLoop gameState
+            else do 
+                output ("Current arrow count: " ++ show (arrowCount (playerState gameState)))
+                arrowEnumList <- shootArrow -- passed in for dealing with logic with wumpus
+                let newGameState = updateArrowCount gameState
+                oneLoop newGameState
 
             -- the arrow will have to move through the rooms, and on the last one will have to see if it hit the wumpus or if it startled the wumpus
             -- also update the arrow count
-            oneLoop gameState
+          
 
 
 

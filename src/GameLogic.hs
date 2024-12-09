@@ -69,7 +69,7 @@ createStartState startGameState = GameState
         playerState = PlayerState { 
             currentPosition = playerCurrentPosition startGameState,
             lastPosition = playerLastPostion startGameState,
-            arrowCount = playerLastPostion startGameState
+            arrowCount = playerArrowCount startGameState
         },
       wumpusState = WumpusState { wumpusPosition = wumpusPos },
       environmentState = EnvironmentState { hazards = envHazards },
@@ -100,8 +100,22 @@ collectMoves :: Int -> [Move] -> IO [Move]
 collectMoves 0 moves = return moves  -- Stop when the maximum number of moves is reached
 collectMoves remaining moves = do
     putStrLn $ "Arrow moves collected so far: " ++ show moves
-    putStrLn $ "You can shoot the arrow " ++ show remaining ++ " more times."
+    putStrLn $ "The arrow can go " ++ show remaining ++ " more rooms."
     move <- getArrowMoveFromUser
     case move of 
         Nothing -> return moves -- return the list smaller than 5
         Just validMove -> collectMoves (remaining - 1) (moves ++ [validMove])  -- Append the move and decrement the counter
+
+
+
+updateArrowCount :: GameState -> GameState
+updateArrowCount gameState =
+    let 
+        currentArrows = arrowCount (playerState gameState)
+        updatedArrows = max 0 (currentArrows - 1)  -- Ensure the arrow count does not go below 0
+    in 
+        gameState { 
+            playerState = (playerState gameState) { 
+                arrowCount = updatedArrows 
+            } 
+        }
