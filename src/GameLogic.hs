@@ -123,10 +123,3 @@ updateArrowCount gameState =
                 arrowCount = updatedArrows
             }
         }
-
-
-
-
-
-
-
