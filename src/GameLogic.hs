@@ -72,13 +72,13 @@ createStartState startGameState = GameState
           arrowCount = playerArrowCount startGameState
       },
       wumpusState = WumpusState {
-          wumpusPosition = wumpusPos,
-          lastWumpusPosition = lastWumpusPos
+          wumpusPosition = wumpusPos
           },
       environmentState = EnvironmentState { hazards = envHazards },
       randomGen = nextGen,
       mover = move (caveLayout startGameState),
-      isAlive = True
+      isAlive = True,
+      lastPosFinder = (!!) (head (caveLayout startGameState))
     }
     where
         indices = [0..(length (caveLayout startGameState)-1)]

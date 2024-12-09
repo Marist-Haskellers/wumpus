@@ -32,8 +32,7 @@ data PlayerState = PlayerState
   }
 
 data WumpusState = WumpusState
-  { wumpusPosition :: Position,
-    lastWumpusPosition :: Position
+  { wumpusPosition :: Position
   }
 
 data EnvironmentState = EnvironmentState
@@ -46,7 +45,10 @@ data GameState = GameState
       environmentState :: EnvironmentState,
       mover :: MoveInMap,
       randomGen :: StdGen,
-      isAlive :: Bool
+      isAlive :: Bool,
+      -- to find some last postion for wumpus and
+      -- when player gets moved
+      lastPosFinder :: Position -> Position
     }
 
 
