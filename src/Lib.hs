@@ -32,16 +32,12 @@ oneLoop gameState = do
             move <- getMoveFromUser
             let oldPos = lastPosition (playerState gameState)
             let newPos = mover gameState curPos oldPos move
-            oneLoop GameState {
-                mover=mover gameState,
-                wumpusState=wumpusState gameState,
-                randomGen=randomGen gameState,
+            oneLoop gameState {
                 playerState= PlayerState {
                     lastPosition=curPos,
                     currentPosition=newPos,
                     arrowCount=arrowCount (playerState gameState)
-                    },
-                environmentState=environmentState gameState
+                    }
                 }
         ChoiceSense -> do
             sense <- getSenseFromUser

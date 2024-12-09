@@ -69,7 +69,7 @@ createStartState startGameState = GameState
         playerState = PlayerState { 
             currentPosition = playerCurrentPosition startGameState,
             lastPosition = playerLastPostion startGameState,
-            arrowCount = playerLastPostion startGameState
+            arrowCount = playerArrowCount startGameState
         },
       wumpusState = WumpusState { wumpusPosition = wumpusPos },
       environmentState = EnvironmentState { hazards = envHazards },

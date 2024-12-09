@@ -1,5 +1,6 @@
 module Hazards where
-import Types (Hazard(..), Sense(..), Position, CaveLayout, Move(..), GameState(..), PlayerState(..), WumpusState(..), EnvironmentState(..))
+import Types (Hazard(..), Sense(..), Position, CaveLayout, Move(..), GameState(..), PlayerState(..), WumpusState(..), EnvironmentState(..), Move)
+import System.Random
 
 toSense :: Hazard -> Sense
 toSense Bats = Hear
@@ -19,9 +20,35 @@ senseHazards gameState = do
     senses ++ map (toSense . snd) (filter (\(pos, _) -> pos `elem` neighbors) hzrds) 
 
 
-handleHazards :: Position -> [(Position, Hazard)] -> Maybe String
-handleHazards position hazardsItems =
-    case lookup position hazardsItems of
-        Just Bats -> Just "A swarm of super-bats swoops in and lifts you away."
-        Just Pit  -> Just "You fell into a bottomless pit and died."
-        Nothing   -> Nothing
+handleEnvironmentHazards :: GameState -> (Maybe String, GameState)
+handleEnvironmentHazards = undefined
+
+handleHazards :: GameState -> (Maybe String, GameState)
+handleHazards gameState = do
+    let currentPos = currentPosition (playerState gameState)
+    let wumpusPos = wumpusPosition(wumpusState gameState)
+    if currentPos == wumpusPos 
+        then 
+            let 
+                gen = randomGen gameState
+                (doKill, newGen) = random gen :: (Bool, StdGen)
+                -- TODO this stopped compiling for some reason
+                (randomMove, newestGen) = random newGen :: (Move, StdGen)
+                message = if doKill 
+                    then Just "The Wumpus caught and devoured you" 
+                    else Just "The wumpus ran away from you"
+                oldWumpusPos = wumpusPosition (wumpusState gameState)
+                -- any valid last pos works
+                -- TODO
+                someLastPos = undefined
+                moverInMap = mover gameState 
+                newWumpusPos = moverInMap oldWumpusPos someLastPos randomMove
+            in
+            (
+            message,
+            gameState {
+                wumpusState=WumpusState {wumpusPosition=newWumpusPos},
+                randomGen=newestGen
+                }
+            ) 
+        else handleEnvironmentHazards gameState
