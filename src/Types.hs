@@ -11,6 +11,12 @@ type Position = Int
 -- For a decahedron it Left Right Back make sense for every move as you will always have those options
 --    if orientated correctly
 data Move = Left | Right | Back | Stop deriving(Show, Eq, Enum, Bounded)
+-- implementation of random for Move (I assume it would work)
+instance Random Move where
+  randomR (a, b) g = case randomR (fromEnum a, fromEnum b) g of
+    (x, g') -> (toEnum x, g')
+  random g = randomR (minBound, maxBound) g
+
 type MoveInMap = Position -> Position -> Move -> Position
 
 data Sense = Hear | Feel | Smell deriving(Show, Eq)
@@ -26,7 +32,8 @@ data PlayerState = PlayerState
   }
 
 data WumpusState = WumpusState
-  { wumpusPosition :: Position
+  { wumpusPosition :: Position,
+    lastWumpusPosition :: Position
   }
 
 data EnvironmentState = EnvironmentState
@@ -38,7 +45,8 @@ data GameState = GameState
       wumpusState :: WumpusState,
       environmentState :: EnvironmentState,
       mover :: MoveInMap,
-      randomGen :: StdGen
+      randomGen :: StdGen,
+      isAlive :: Bool
     }
 
 

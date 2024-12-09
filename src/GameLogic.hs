@@ -66,15 +66,16 @@ data StartGameState = StartGameState
 createStartState :: StartGameState -> GameState
 createStartState startGameState = GameState
     { 
-        playerState = PlayerState { 
-            currentPosition = playerCurrentPosition startGameState,
-            lastPosition = playerLastPostion startGameState,
-            arrowCount = playerArrowCount startGameState
-        },
+      playerState = PlayerState { 
+          currentPosition = playerCurrentPosition startGameState,
+          lastPosition = playerLastPostion startGameState,
+          arrowCount = playerArrowCount startGameState
+      },
       wumpusState = WumpusState { wumpusPosition = wumpusPos },
       environmentState = EnvironmentState { hazards = envHazards },
       randomGen = nextGen,
-      mover = move (caveLayout startGameState)
+      mover = move (caveLayout startGameState),
+      isAlive = True
     }
     where 
         indices = [0..(length (caveLayout startGameState)-1)]
