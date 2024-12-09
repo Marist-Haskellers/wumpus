@@ -107,7 +107,6 @@ collectMoves remaining moves = do
         Just validMove -> collectMoves (remaining - 1) (moves ++ [validMove])  -- Append the move and decrement the counter
 
 
-
 updateArrowCount :: GameState -> GameState
 updateArrowCount gameState =
     let 
@@ -119,3 +118,4 @@ updateArrowCount gameState =
                 arrowCount = updatedArrows 
             } 
         }
+
