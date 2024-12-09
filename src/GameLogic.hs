@@ -17,7 +17,7 @@ move :: CaveLayout -> Position -> Position -> Move -> Position
 
 -- this assumes that the map is bidirectional else the transformation will start
 move layout startPos prevPos moveTo = neighbors !! ( (moveTransform + matchingIndex) `mod` length neighbors )
-    where 
+    where
         neighbors = layout !! startPos
         matchingIndex = fromMaybe 0 (elemIndex prevPos neighbors)
         moveTransform = case moveTo of
@@ -65,25 +65,29 @@ data StartGameState = StartGameState
 
 createStartState :: StartGameState -> GameState
 createStartState startGameState = GameState
-    { 
-        playerState = PlayerState { 
-            currentPosition = playerCurrentPosition startGameState,
-            lastPosition = playerLastPostion startGameState,
-            arrowCount = playerArrowCount startGameState
-        },
-      wumpusState = WumpusState { wumpusPosition = wumpusPos },
+    {
+      playerState = PlayerState {
+          currentPosition = playerCurrentPosition startGameState,
+          lastPosition = playerLastPostion startGameState,
+          arrowCount = playerArrowCount startGameState
+      },
+      wumpusState = WumpusState {
+          wumpusPosition = wumpusPos,
+          lastWumpusPosition = lastWumpusPos
+          },
       environmentState = EnvironmentState { hazards = envHazards },
       randomGen = nextGen,
       mover = move (caveLayout startGameState)
     }
-    where 
+    where
         indices = [0..(length (caveLayout startGameState)-1)]
-        (stateGen, nextGen) = split (startRandomGen startGameState) 
+        (stateGen, nextGen) = split (startRandomGen startGameState)
         shuffledIndices = shuffle' indices (length (caveLayout startGameState)) stateGen
         -- make it so that the wumpus/ hazards cannot be at the start
         -- Maybe it makes since that they also cannot be neighbors but that is not implemented
         (wumpusPos:restIndices) = filter (/= 0) shuffledIndices
-        hazardsList = replicate (numberOfBats startGameState) Bats 
+        lastWumpusPos = head (caveLayout startGameState !! wumpusPos)
+        hazardsList = replicate (numberOfBats startGameState) Bats
             ++ replicate (numberOfBats startGameState) Pit
         envHazards = zip restIndices hazardsList
 
@@ -102,21 +106,21 @@ collectMoves remaining moves = do
     putStrLn $ "Arrow moves collected so far: " ++ show moves
     putStrLn $ "The arrow can go " ++ show remaining ++ " more rooms."
     move <- getArrowMoveFromUser
-    case move of 
+    case move of
         Nothing -> return moves -- return the list smaller than 5
         Just validMove -> collectMoves (remaining - 1) (moves ++ [validMove])  -- Append the move and decrement the counter
 
 
 updateArrowCount :: GameState -> GameState
 updateArrowCount gameState =
-    let 
+    let
         currentArrows = arrowCount (playerState gameState)
         updatedArrows = max 0 (currentArrows - 1)  -- Ensure the arrow count does not go below 0
-    in 
-        gameState { 
-            playerState = (playerState gameState) { 
-                arrowCount = updatedArrows 
-            } 
+    in
+        gameState {
+            playerState = (playerState gameState) {
+                arrowCount = updatedArrows
+            }
         }
 
 
