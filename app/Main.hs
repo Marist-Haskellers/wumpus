@@ -30,7 +30,7 @@ main = do
   generator <- newStdGen
   let initialGameState = initialState generator chosenLayout
   -- Debugging for game state
-  debug True initialGameState
+  debug False initialGameState
   -- Begin game loop
   gameLoopIO initialGameState
 
