@@ -123,3 +123,51 @@ updateArrowCount gameState =
                 arrowCount = updatedArrows
             }
         }
+
+
+-- Calculate the final room the arrow ends up in based on its movement
+arrowPathResult :: GameState -> Position -> [Move] -> Position
+arrowPathResult gameState startPos moves =
+    foldl (\curPos move -> mover gameState curPos curPos move) startPos moves
+
+arrowInRoomWithWumpus :: GameState -> (String, GameState)
+arrowInRoomWithWumpus gameState =
+    let
+        gen = randomGen gameState
+        (doKill, newGen) = random gen :: (Bool, StdGen)
+        (randomMove, newestGen) = random newGen :: (Move, StdGen)
+        wumpusPos = wumpusPosition (wumpusState gameState)
+        prevWumpusPos = lastWumpusPosition (wumpusState gameState)
+        moverInMap = mover gameState
+        newWumpusPos = moverInMap wumpusPos prevWumpusPos randomMove
+    in
+        if doKill
+        then
+            -- Wumpus is killed
+            ( "The arrow killed the Wumpus! You win!",
+              gameState {
+                  isAlive = False, 
+                  randomGen = newGen
+              }
+            )
+        else
+            -- Wumpus is scared and moves
+            ( "The Wumpus was scared and ran to another room!",
+              gameState {
+                  wumpusState = WumpusState {
+                      wumpusPosition = newWumpusPos,
+                      lastWumpusPosition = wumpusPos
+                  },
+                  randomGen = newestGen
+              }
+            )
+
+
+  
+
+
+
+
+
+
+

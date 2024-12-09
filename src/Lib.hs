@@ -1,9 +1,9 @@
 module Lib where
     -- ( startGame
     -- ) where
-import Types (GameState(..), Choice(..), PlayerState(..))
+import Types (GameState(..), Choice(..), PlayerState(..), WumpusState(..))
 import IO (getChoiceFromUser, getMoveFromUser, output, getSenseFromUser, playerMoveToGame)
-import GameLogic (StartGameState (..), createStartState, decahedron, shootArrow, updateArrowCount)
+import GameLogic (StartGameState (..), createStartState, decahedron, shootArrow, updateArrowCount, arrowPathResult, arrowInRoomWithWumpus)
 import System.Random
 import Hazards
 
@@ -23,9 +23,11 @@ startGame = do
 
 oneLoop :: GameState -> IO GameState
 oneLoop gameState = do
-    -- output (map . show (hazards (environmentState gameState)))
     let curPos = currentPosition (playerState gameState)
     output ("You are currently in room " ++ show curPos)
+    let wumpusPos = wumpusPosition (wumpusState gameState)
+    output ("The Wumpus is currently in room " ++ show wumpusPos) -- Debugging line
+
     choice <- getChoiceFromUser
     case choice of
         ChoiceMove -> do
@@ -46,19 +48,29 @@ oneLoop gameState = do
             output (senseString ++ show sense)
             oneLoop gameState
         ChoiceShoot -> do
-            -- check gameState to see if you have arrows in the first place (0 will give a specific prompt)
-            if arrowCount (playerState gameState) <= 0
+           if arrowCount (playerState gameState) <= 0
             then do 
                 output "No arrows left to shoot."
                 oneLoop gameState
             else do 
                 output ("Current arrow count: " ++ show (arrowCount (playerState gameState)))
-                arrowEnumList <- shootArrow -- passed in for dealing with logic with wumpus
-                let newGameState = updateArrowCount gameState
+                arrowMoves <- shootArrow
+                let startPos = currentPosition (playerState gameState)
+                let finalArrowPos = arrowPathResult gameState startPos arrowMoves
+                output ("The arrow traveled through the rooms and ended up in room " ++ show finalArrowPos)
+
+                let (message, updatedGameState) =
+                        if finalArrowPos == wumpusPosition (wumpusState gameState)
+                        then arrowInRoomWithWumpus gameState
+                        else ("The arrow missed the Wumpus!", gameState)
+
+                output message
+
+                -- update the arrow count
+                let newGameState = updateArrowCount updatedGameState
                 oneLoop newGameState
 
-            -- the arrow will have to move through the rooms, and on the last one will have to see if it hit the wumpus or if it startled the wumpus
-            -- also update the arrow count
+
           
 
 
