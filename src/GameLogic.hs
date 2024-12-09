@@ -137,7 +137,8 @@ arrowInRoomWithWumpus gameState =
         (doKill, newGen) = random gen :: (Bool, StdGen)
         (randomMove, newestGen) = random newGen :: (Move, StdGen)
         wumpusPos = wumpusPosition (wumpusState gameState)
-        prevWumpusPos = lastWumpusPosition (wumpusState gameState)
+        finder = lastPosFinder gameState
+        prevWumpusPos = finder wumpusPos
         moverInMap = mover gameState
         newWumpusPos = moverInMap wumpusPos prevWumpusPos randomMove
     in
@@ -155,8 +156,7 @@ arrowInRoomWithWumpus gameState =
             ( "The Wumpus was scared and ran to another room!",
               gameState {
                   wumpusState = WumpusState {
-                      wumpusPosition = newWumpusPos,
-                      lastWumpusPosition = wumpusPos
+                      wumpusPosition = newWumpusPos
                   },
                   randomGen = newestGen
               }
