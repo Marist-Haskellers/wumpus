@@ -20,8 +20,8 @@ senseHazards gameState = do
 
 
 handleHazards :: Position -> [(Position, Hazard)] -> Maybe String
-handleHazards position hazards =
-    case lookup position hazards of
+handleHazards position hazardsItems =
+    case lookup position hazardsItems of
         Just Bats -> Just "A swarm of super-bats swoops in and lifts you away."
         Just Pit  -> Just "You fell into a bottomless pit and died."
         Nothing   -> Nothing
