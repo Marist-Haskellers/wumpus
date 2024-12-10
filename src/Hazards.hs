@@ -22,52 +22,81 @@ senseHazards gameState = do
 
 
 
-handleEnvironmentHazard :: GameState -> Maybe Hazard -> GameState
-handleEnvironmentHazard gameState Nothing = gameState
-handleEnvironmentHazard gameState (Just hzrd) = undefined
-
+handleEnvironmentHazard :: GameState -> Maybe Hazard -> (Maybe String, GameState)
+handleEnvironmentHazard gameState Nothing = (Nothing, gameState)
+handleEnvironmentHazard gameState (Just Pit) = (
+    Just "You fell into a pit! You die.", 
+    gameState { isAlive=False }
+    )
+handleEnvironmentHazard gameState (Just Bats) = 
+    let
+        lastPlayerState = playerState gameState
+        lastPos = lastPosition lastPlayerState
+        -- move the player to a new room that is not the current room
+        -- essentially mapping it to a move after it in index cycling back to 0 if going over
+        -- the length
+        oldGen = randomGen gameState
+        (toAddIndices, newGen) = randomR (0, amountOfRooms gameState - 1) oldGen
+        newPlayerPos = (toAddIndices + lastPos) `mod` amountOfRooms gameState
+        finder = lastPosFinder gameState
+        newLastPlayerPos = finder newPlayerPos
+    in
+        (
+            Just "You are taken by bats to a new room!",
+            gameState { 
+                playerState=lastPlayerState {
+                    currentPosition = newPlayerPos,
+                    lastPosition = newLastPlayerPos
+                },
+                randomGen=newGen
+            }
+        )
 
 
 handleEnvironmentHazards :: GameState -> (Maybe String, GameState)
-handleEnvironmentHazards gameState = do
-    let hzrds = hazards (environmentState gameState)
-    let currentPos = currentPosition (playerState gameState)
+handleEnvironmentHazards gameState =
+    let
+        hzrds = hazards (environmentState gameState)
+        currentPos = currentPosition (playerState gameState)
     -- if you could one into multiple hazards at once this would need to be changed
-    let firstHazard = fmap snd (find (\(pos, _) -> pos == currentPos) hzrds)
+        hzrd = fmap snd (find (\(pos, _) -> pos == currentPos) hzrds)
+    in
+        handleEnvironmentHazard gameState hzrd
 
 
-    (Nothing, gameState)
-
-
+handleWumpusInMyNoNoSquare :: GameState -> (Maybe String, GameState)
+handleWumpusInMyNoNoSquare gameState =
+    let 
+        gen = randomGen gameState
+        (doKill, newGen) = random gen :: (Bool, StdGen)
+        (randomMove, newestGen) = random newGen :: (Move, StdGen)
+        message = if doKill 
+            then Just "The Wumpus caught and ate you."
+            else Just "The Wumpus ran away from you."
+        oldWumpusPos = wumpusPosition (wumpusState gameState)
+        finder = lastPosFinder gameState
+        prevWumpusPos = finder oldWumpusPos
+        moverInMap = mover gameState 
+        -- can move anyways bc game is over
+        newWumpusPos = moverInMap oldWumpusPos prevWumpusPos randomMove
+    in
+    (
+    message,
+    gameState {
+        wumpusState=WumpusState {
+            wumpusPosition=newWumpusPos
+            },
+        randomGen=newestGen,
+        isAlive=not doKill
+        }
+    ) 
 
 handleHazards :: GameState -> (Maybe String, GameState)
-handleHazards gameState = do
-    let currentPos = currentPosition (playerState gameState)
-    let wumpusPos = wumpusPosition(wumpusState gameState)
+handleHazards gameState = 
+    let 
+        currentPos = currentPosition (playerState gameState)
+        wumpusPos = wumpusPosition(wumpusState gameState)
+    in
     if currentPos == wumpusPos 
-        then 
-            let 
-                gen = randomGen gameState
-                (doKill, newGen) = random gen :: (Bool, StdGen)
-                (randomMove, newestGen) = random newGen :: (Move, StdGen)
-                message = if doKill 
-                    then Just "The Wumpus caught and ate you" 
-                    else Just "The Wumpus ran away from you"
-                oldWumpusPos = wumpusPosition (wumpusState gameState)
-                finder = lastPosFinder gameState
-                prevWumpusPos = finder oldWumpusPos
-                moverInMap = mover gameState 
-                -- can move anyways bc game is over
-                newWumpusPos = moverInMap oldWumpusPos prevWumpusPos randomMove
-            in
-            (
-            message,
-            gameState {
-                wumpusState=WumpusState {
-                    wumpusPosition=newWumpusPos
-                    },
-                randomGen=newestGen,
-                isAlive=not doKill
-                }
-            ) 
+        then handleWumpusInMyNoNoSquare gameState
         else handleEnvironmentHazards gameState

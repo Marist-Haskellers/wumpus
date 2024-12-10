@@ -78,7 +78,8 @@ createStartState startGameState = GameState
       randomGen = nextGen,
       mover = move (caveLayout startGameState),
       isAlive = True,
-      lastPosFinder = (!!) (head (caveLayout startGameState))
+      lastPosFinder = head . (!!) (caveLayout startGameState),
+      amountOfRooms = length (caveLayout startGameState)
     }
     where
         indices = [0..(length (caveLayout startGameState)-1)]

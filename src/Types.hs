@@ -48,7 +48,8 @@ data GameState = GameState
       isAlive :: Bool,
       -- to find some last postion for wumpus and
       -- when player gets moved
-      lastPosFinder :: Position -> Position
+      lastPosFinder :: Position -> Position,
+      amountOfRooms :: Int
     }
 
 
